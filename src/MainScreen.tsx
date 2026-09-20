@@ -53,7 +53,7 @@ export function MainScreen() {
     <main className="lobby">
       <header>
         <div>
-          <h1>Before &amp; After</h1>
+          <h1>Before <span className="amp">&amp;</span> After</h1>
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>
@@ -97,13 +97,33 @@ const Chip = ({ on, children }: { on: boolean; children: string }) => (
   <span className={on ? "chip on" : "chip"}>{on ? "✓" : "…"} {children}</span>
 );
 
-/** Full-screen presentation of one player's before / after / video. */
+/** Full-screen presentation of one player's before / after / video, in a gold frame. */
 function Stage({ name, step, media }: { name: string; step: "before" | "after" | "video"; media: Media }) {
   return (
     <main className="stage">
-      <div className="stage-label">{name} — {step.toUpperCase()}</div>
-      {step === "video" ? <Video src={media.video} /> : <img key={step} src={media[step]} alt={`${name} ${step}`} />}
+      {step === "video" ? <Video key="video" src={media.video} /> : (
+        <Framed key={step}>
+          {(setRatio) => (
+            <img src={media[step]} alt={`${name} ${step}`}
+              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} />
+          )}
+        </Framed>
+      )}
+      <div className="stage-label"><span>{step}</span> · {name}</div>
     </main>
+  );
+}
+
+/**
+ * Gold frame that hugs its media. Once the media's aspect ratio is known, it is
+ * sized to be as large as the screen allows (see `.frame` in styles.css).
+ */
+function Framed({ children }: { children: (setRatio: (r: number) => void) => React.ReactNode }) {
+  const [ratio, setRatio] = useState<number>();
+  return (
+    <div className={ratio ? "frame ready" : "frame"} style={ratio ? ({ "--ratio": ratio } as React.CSSProperties) : undefined}>
+      {children(setRatio)}
+    </div>
   );
 }
 
@@ -114,7 +134,12 @@ function Video({ src }: { src?: string }) {
   if (!src) return <p className="muted">No video was submitted.</p>;
   return (
     <>
-      <video ref={ref} src={src} controls playsInline autoPlay onPlay={() => setBlocked(false)} />
+      <Framed>
+        {(setRatio) => (
+          <video ref={ref} src={src} controls playsInline autoPlay onPlay={() => setBlocked(false)}
+            onLoadedMetadata={(e) => setRatio(e.currentTarget.videoWidth / e.currentTarget.videoHeight)} />
+        )}
+      </Framed>
       {blocked && <button className="big overlay" onClick={() => void ref.current?.play()}>▶ Play video</button>}
     </>
   );
