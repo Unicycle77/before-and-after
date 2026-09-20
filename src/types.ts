@@ -19,7 +19,8 @@ export type Media = Partial<Record<MediaKind, string>>;
 
 export interface Session {
   hostUid: string;
-  firstPlayerUid?: string;
+  /** The host's phone (claimed via /host). Only it (and the main screen) can drive the display. */
+  controllerUid?: string;
   players?: Record<string, Player>;
   media?: Record<string, Media>;
   display?: Display;

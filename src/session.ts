@@ -74,12 +74,38 @@ export async function joinSession(rawCode: string, rawName: string): Promise<str
     connected: true,
   });
   void onDisconnect(ref(db(), `sessions/${code}/players/${user.uid}/connected`)).set(false);
-  // First to join becomes the remote-control host. The rule only allows this
-  // write while the field is empty, so a PERMISSION_DENIED just means someone beat us.
-  try {
-    await set(ref(db(), `sessions/${code}/firstPlayerUid`), user.uid);
-  } catch { /* already claimed */ }
   return code;
+}
+
+/** Host phone: connects to a session as its remote controller (one per session). */
+export async function claimController(rawCode: string): Promise<string> {
+  const code = rawCode.trim().toUpperCase();
+  const user = await ensureSignedIn();
+  const snap = await get(ref(db(), `sessions/${code}`));
+  if (!snap.exists()) throw new JoinError(`No session found for code ${code}.`);
+  const current = (snap.val() as Session).controllerUid;
+  if (current && current !== user.uid) {
+    throw new JoinError("This session already has a host remote. Ask for it to be reset on the main screen.");
+  }
+  try {
+    await set(ref(db(), `sessions/${code}/controllerUid`), user.uid);
+  } catch {
+    throw new JoinError("Couldn't connect as host — someone else just did.");
+  }
+  return code;
+}
+
+/** Main screen: disconnects the current host remote so another phone can claim it. */
+export const resetController = (code: string) => remove(ref(db(), `sessions/${code}/controllerUid`));
+
+/** Pulls a 4-char code from a scanned join URL (?code=ABCD) or a bare code. */
+export function extractCode(text: string): string | null {
+  try {
+    const c = new URL(text).searchParams.get("code");
+    if (c) return c.toUpperCase().slice(0, 4);
+  } catch { /* not a URL */ }
+  const t = text.trim().toUpperCase();
+  return /^[A-Z0-9]{4}$/.test(t) ? t : null;
 }
 
 export const leaveSession = (code: string, uid: string) =>

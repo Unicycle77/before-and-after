@@ -1,7 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { PUBLIC_URL, joinUrlFor } from "./firebase";
-import { createSession, ensureSignedIn, setDisplay, store, useSession } from "./session";
+import { createSession, ensureSignedIn, resetController, setDisplay, store, useSession } from "./session";
 import type { Media, Player } from "./types";
 
 const KEY = "ba.hostCode";
@@ -64,26 +64,27 @@ export function MainScreen() {
       {players.length === 0 && <p className="muted">Waiting for players to join…</p>}
       <ul className="tiles">
         {players.map(([uid, p]) => (
-          <Tile key={uid} player={p} media={media[uid] ?? {}} isHost={uid === session.firstPlayerUid}
+          <Tile key={uid} player={p} media={media[uid] ?? {}}
             onPick={() => void setDisplay(code, { uid, step: "before" })} />
         ))}
       </ul>
       <p className="muted small">
-        {session.firstPlayerUid && session.players?.[session.firstPlayerUid]
-          ? <>👑 {session.players[session.firstPlayerUid]!.name} is the host — controls are on their phone (you can also click a player here).</>
-          : "The first player to join becomes the host and controls this screen from their phone."}
+        {session.controllerUid
+          ? <>🎮 Host remote connected. <button className="link" onClick={() => void resetController(code)}>Reset</button></>
+          : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
+        {" "}You can also click a player here.
       </p>
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
     </main>
   );
 }
 
-function Tile({ player, media, isHost, onPick }: { player: Player; media: Media; isHost: boolean; onPick: () => void }) {
+function Tile({ player, media, onPick }: { player: Player; media: Media; onPick: () => void }) {
   const ready = !!media.before && !!media.after;
   return (
     <li>
       <button className="tile" disabled={!ready} onClick={onPick}>
-        <span className="name">{isHost ? "👑 " : ""}{player.name}{player.connected === false ? " (away)" : ""}</span>
+        <span className="name">{player.name}{player.connected === false ? " (away)" : ""}</span>
         <span className="chips">
           <Chip on={!!media.before}>Before</Chip><Chip on={!!media.after}>After</Chip><Chip on={!!media.video}>Video</Chip>
         </span>

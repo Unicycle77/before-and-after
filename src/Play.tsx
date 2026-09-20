@@ -1,22 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { QrScannerModal } from "./QrScannerModal";
-import { HostRemote } from "./HostRemote";
 import { submitMedia } from "./media";
-import { JoinError, joinSession, leaveSession, store, useSession, useUid } from "./session";
+import { JoinError, extractCode, joinSession, leaveSession, store, useSession, useUid } from "./session";
 import type { MediaKind } from "./types";
 
 const CODE_KEY = "ba.playCode";
 const NAME_KEY = "ba.playName";
-
-/** Pulls a 4-char code from a scanned join URL (?code=ABCD) or a bare code. */
-function extractCode(text: string): string | null {
-  try {
-    const c = new URL(text).searchParams.get("code");
-    if (c) return c.toUpperCase().slice(0, 4);
-  } catch { /* not a URL */ }
-  const t = text.trim().toUpperCase();
-  return /^[A-Z0-9]{4}$/.test(t) ? t : null;
-}
 
 export function Play() {
   const uid = useUid();
@@ -34,10 +23,9 @@ export function Play() {
   if (!code) return <Join onJoined={(c) => { store.set(CODE_KEY, c); setCode(c); }} />;
   if (!uid || !session?.players?.[uid]) return <main className="center"><p>Loading…</p></main>;
 
-  const isHost = uid === session.firstPlayerUid;
   return (
     <PlayerHome
-      code={code} uid={uid} name={session.players[uid]!.name} isHost={isHost} session={session}
+      code={code} uid={uid} name={session.players[uid]!.name} session={session}
       onLeave={() => { void leaveSession(code, uid); leave(); }}
     />
   );
@@ -89,27 +77,16 @@ function Join({ onJoined }: { onJoined: (code: string) => void }) {
   );
 }
 
-function PlayerHome({ code, uid, name, isHost, session, onLeave }: {
-  code: string; uid: string; name: string; isHost: boolean; session: NonNullable<ReturnType<typeof useSession>>; onLeave: () => void;
+function PlayerHome({ code, uid, name, session, onLeave }: {
+  code: string; uid: string; name: string; session: NonNullable<ReturnType<typeof useSession>>; onLeave: () => void;
 }) {
-  const [tab, setTab] = useState<"mine" | "host">(isHost ? "host" : "mine");
   const mine = session.media?.[uid] ?? {};
   return (
     <main className="phone">
       <header><strong>{name}</strong><span className="muted"> · {code}</span></header>
-      {isHost && (
-        <nav className="tabs">
-          <button className={tab === "host" ? "active" : ""} onClick={() => setTab("host")}>👑 Host controls</button>
-          <button className={tab === "mine" ? "active" : ""} onClick={() => setTab("mine")}>My submission</button>
-        </nav>
-      )}
-      {isHost && tab === "host" ? <HostRemote code={code} session={session} /> : (
-        <>
-          <Slot code={code} uid={uid} kind="before" label="Before" url={mine.before} />
-          <Slot code={code} uid={uid} kind="after" label="After" url={mine.after} />
-          <Slot code={code} uid={uid} kind="video" label="What happened in between" url={mine.video} />
-        </>
-      )}
+      <Slot code={code} uid={uid} kind="before" label="Before" url={mine.before} />
+      <Slot code={code} uid={uid} kind="after" label="After" url={mine.after} />
+      <Slot code={code} uid={uid} kind="video" label="What happened in between" url={mine.video} />
       <button className="link" onClick={onLeave}>Leave session</button>
     </main>
   );

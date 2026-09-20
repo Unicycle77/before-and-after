@@ -1,8 +1,8 @@
 # Before & After
 
-Players join with a 4-letter code (or QR) on their phone and submit a **before** photo, an **after** photo, and a **video** of what happened in between. The main screen shows the player list; the host (first player to join) drives it from their phone: before → after → (pause to discuss) → video.
+Players join with a 4-letter code (or QR) on their phone and submit a **before** photo, an **after** photo, and a **video** of what happened in between. The main screen shows the player list; the host (not a player) drives it from their phone at `/host` using the same code: before → after → (pause to discuss) → video.
 
-- `/` — main screen (shared display). `/play` — phones.
+- `/` — main screen (shared display). `/play` — players' phones. `/host` — host remote.
 - Firebase: Anonymous Auth, Realtime Database (session state), Storage (media).
 
 ## Setup
