@@ -21,3 +21,6 @@ gcloud storage buckets update gs://before-and-after-6a096.firebasestorage.app --
 ```
 
 (`cors.json` in this repo has the same content.) Players who were removed from the session are not included.
+
+## Jukebox
+Music is **never uploaded or committed**: the main-screen PC reads MP3s straight from a local folder. On the main screen (Chrome/Edge), click **🎵 Choose music folder** once and pick the folder (subfolders are included). The song list is shared with the host phone's **🎵 Jukebox** tab, which has Play/Pause, a Repeat toggle, volume, and tap-to-play. A song plays once (then stops) or repeats until you pause or pick another; it never advances by itself. Music pauses automatically while a video plays. Chrome remembers the folder but may ask for one click to re-grant access after a refresh ("Reconnect music folder"). Avoid picking `Downloads` or your whole home folder itself — Chrome refuses those; a dedicated folder like `C:\Music\BeforeAndAfter` works.

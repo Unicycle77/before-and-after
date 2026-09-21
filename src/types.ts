@@ -20,6 +20,13 @@ export interface Player {
 /** Download URLs of a player's submissions. RTDB drops empty objects, so all optional. */
 export type Media = Partial<Record<MediaKind, string>>;
 
+export interface Jukebox {
+  /** Song titles, published by the main screen (the files stay on that PC). */
+  tracks?: string[];
+  /** Playback state, written by the host remote (and by the main screen when a song ends). */
+  state?: { current?: number; playing?: boolean; volume?: number; repeat?: boolean };
+}
+
 export interface Session {
   hostUid: string;
   /** The host's phone (claimed via /host). Only it (and the main screen) can drive the display. */
@@ -29,4 +36,5 @@ export interface Session {
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;
+  jukebox?: Jukebox;
 }

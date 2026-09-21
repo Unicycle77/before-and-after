@@ -26,6 +26,15 @@
           }
         },
 
+        "jukebox": {
+          "tracks": {
+            ".write": "auth != null && root.child('sessions').child($code).child('hostUid').val() === auth.uid"
+          },
+          "state": {
+            ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
+          }
+        },
+
         "showDownload": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
           ".validate": "newData.isBoolean()"

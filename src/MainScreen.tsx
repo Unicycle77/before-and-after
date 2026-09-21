@@ -1,6 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { DownloadZip } from "./DownloadZip";
+import { Jukebox } from "./Jukebox";
 import { StageControls } from "./StageControls";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
@@ -46,12 +47,19 @@ export function MainScreen() {
   const display = session.display ?? { step: "list" as const };
   const shown = display.uid ? session.players?.[display.uid] : undefined;
   const shownMedia = display.uid ? media[display.uid] : undefined;
+  const videoPlaying = display.step === "video" && display.playing !== false;
 
   if (display.step !== "list" && shown && shownMedia) {
-    return <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} />;
+    return (
+      <>
+        <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} />
+        <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi={false} />
+      </>
+    );
   }
 
   return (
+    <>
     <main className="lobby">
       <header>
         <div>
@@ -90,6 +98,8 @@ export function MainScreen() {
       {session.showDownload && <DownloadZip code={code} players={session.players ?? {}} media={media} />}
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
     </main>
+    <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi />
+    </>
   );
 }
 

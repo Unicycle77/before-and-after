@@ -2,7 +2,7 @@ import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth"
 import { get, onValue, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
-import type { Display, Session } from "./types";
+import type { Display, Jukebox, Session } from "./types";
 
 let signIn: Promise<User> | undefined;
 
@@ -119,6 +119,14 @@ export const setDisplay = (code: string, display: Display) =>
 
 export const setShowDownload = (code: string, show: boolean) =>
   set(ref(db(), `sessions/${code}/showDownload`), show);
+
+/** Main screen: publishes the song titles found in the chosen music folder. */
+export const publishTracks = (code: string, titles: string[]) =>
+  set(ref(db(), `sessions/${code}/jukebox/tracks`), titles);
+
+/** Changes part of the jukebox playback state (current song, playing, volume). */
+export const setJukeboxState = (code: string, patch: Partial<NonNullable<Jukebox["state"]>>) =>
+  update(ref(db(), `sessions/${code}/jukebox/state`), patch);
 
 /** Changes part of the display (e.g. play/pause) without resetting the rest. */
 export const patchDisplay = (code: string, patch: Partial<Display>) =>

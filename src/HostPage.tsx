@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { HostRemote } from "./HostRemote";
+import { JukeboxRemote } from "./JukeboxRemote";
 import { QrScannerModal } from "./QrScannerModal";
 import { JoinError, claimController, extractCode, store, useSession, useUid } from "./session";
 
@@ -10,6 +11,7 @@ export function HostPage() {
   const uid = useUid();
   const [code, setCode] = useState(() => store.get(KEY));
   const session = useSession(code || undefined);
+  const [tab, setTab] = useState<"screen" | "music">("screen");
 
   const disconnect = () => { store.set(KEY, ""); setCode(""); };
 
@@ -25,7 +27,11 @@ export function HostPage() {
   return (
     <main className="phone">
       <header><strong>🎮 Host remote</strong><span className="muted"> · {code}</span></header>
-      <HostRemote code={code} session={session} />
+      <nav className="tabs">
+        <button className={tab === "screen" ? "active" : ""} onClick={() => setTab("screen")}>📺 Screen</button>
+        <button className={tab === "music" ? "active" : ""} onClick={() => setTab("music")}>🎵 Jukebox</button>
+      </nav>
+      {tab === "screen" ? <HostRemote code={code} session={session} /> : <JukeboxRemote code={code} session={session} />}
       <button className="link" onClick={disconnect}>Disconnect</button>
     </main>
   );
