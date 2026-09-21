@@ -68,6 +68,11 @@ export async function joinSession(rawCode: string, rawName: string): Promise<str
   if (!(await get(ref(db(), `sessions/${code}/hostUid`))).exists()) {
     throw new JoinError(`No session found for code ${code}.`);
   }
+  // A brand-new player starts clean: clear anything left behind by an earlier stint or a partial removal.
+  // (Someone reconnecting with their player record still in place keeps their submission.)
+  if (!(await get(ref(db(), `sessions/${code}/players/${user.uid}`))).exists()) {
+    await remove(ref(db(), `sessions/${code}/media/${user.uid}`));
+  }
   await set(ref(db(), `sessions/${code}/players/${user.uid}`), {
     name,
     joinedAt: serverTimestamp(),
@@ -106,13 +111,16 @@ export function extractCode(text: string): string | null {
   return /^[A-Z0-9]{4}$/.test(t) ? t : null;
 }
 
-export const leaveSession = (code: string, uid: string) =>
-  remove(ref(db(), `sessions/${code}/players/${uid}`));
-
+/** Removes a player *and* their submitted video/photos, so rejoining starts fresh. */
 export const removePlayer = async (code: string, uid: string) => {
-  await remove(ref(db(), `sessions/${code}/players/${uid}`));
-  await remove(ref(db(), `sessions/${code}/media/${uid}`));
+  await Promise.all([
+    remove(ref(db(), `sessions/${code}/players/${uid}`)),
+    remove(ref(db(), `sessions/${code}/media/${uid}`)),
+  ]);
 };
+
+/** A player leaving on their own: same as being removed. */
+export const leaveSession = removePlayer;
 
 export const setDisplay = (code: string, display: Display) =>
   set(ref(db(), `sessions/${code}/display`), display);

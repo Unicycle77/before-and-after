@@ -22,7 +22,7 @@
 
         "media": {
           "$uid": {
-            ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($code).child('hostUid').val() === auth.uid)"
+            ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
           }
         },
 

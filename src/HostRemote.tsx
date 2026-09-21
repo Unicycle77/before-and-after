@@ -63,7 +63,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
                 <span>{p.name}</span>
                 <span className="muted small">{ready ? (m.video ? "ready" : "no video yet") : `waiting: ${[!m.before && "before", !m.after && "after"].filter(Boolean).join(", ")}`}</span>
               </button>
-              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => { if (confirm(`Remove ${p.name}?`)) void removePlayer(code, uid); }}>×</button>
+              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => { if (confirm(`Remove ${p.name} and their video and photos? They can then rejoin fresh.`)) void removePlayer(code, uid); }}>×</button>
             </li>
           );
         })}
