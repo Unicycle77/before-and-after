@@ -4,6 +4,7 @@ import { DownloadZip } from "./DownloadZip";
 import { Jukebox } from "./Jukebox";
 import { Review } from "./Review";
 import { StageControls } from "./StageControls";
+import { submissionStatus } from "./submission";
 import { SafeImg } from "./SafeImg";
 import { playableVideoUrl, preloadImages, preloadVideo } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
@@ -108,7 +109,10 @@ export function MainScreen() {
         </div>
       </header>
 
-      <h2>Players ({players.length})</h2>
+      <h2>
+        Players ({players.length})
+        {players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => submissionStatus(media[uid]) === "submitted").length} submitted</span>}
+      </h2>
       {players.length === 0 && <p className="muted">Waiting for players to join…</p>}
       <ul className="tiles">
         {players.map(([uid, p]) => (
@@ -131,22 +135,17 @@ export function MainScreen() {
 }
 
 function Tile({ player, media, onPick }: { player: Player; media: Media; onPick: () => void }) {
-  const ready = !!media.before && !!media.after;
+  const status = submissionStatus(media);
   return (
     <li>
-      <button className="tile" disabled={!ready} onClick={onPick}>
+      <button className="tile" disabled={status !== "submitted"} onClick={onPick}>
         <span className="name">{player.name}</span>
-        <span className="chips">
-          <Chip on={!!media.before}>Before</Chip><Chip on={!!media.after}>After</Chip><Chip on={!!media.video}>Video</Chip>
-        </span>
+        {status === "submitted" ? <span className="stamp">✓ Submitted</span>
+          : <span className="status">… {status === "sending" ? "sending" : "waiting"}</span>}
       </button>
     </li>
   );
 }
-
-const Chip = ({ on, children }: { on: boolean; children: string }) => (
-  <span className={on ? "chip on" : "chip"}>{on ? "✓" : "…"} {children}</span>
-);
 
 /** Full-screen presentation of one player's before / after / video, in a gold frame. */
 function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list" | "review">; media: Media; display: Display }) {

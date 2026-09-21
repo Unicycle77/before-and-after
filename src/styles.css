@@ -125,9 +125,22 @@ input::placeholder { color: #8b7a63; }
 .tile:disabled { opacity: 0.7; }
 .tile:not(:disabled):hover { transform: rotate(0deg) scale(1.04); border-color: var(--gold-bright); box-shadow: 0 10px 22px #000c, 0 0 0 3px var(--gold); }
 .tile .name { font-size: 1.5rem; }
-.chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.chip { font-size: 0.8rem; color: #7a6a55; text-transform: uppercase; letter-spacing: 0.06em; }
-.chip.on { color: #2f6b22; font-weight: bold; }
+.status { font-size: 0.85rem; color: #7a6a55; text-transform: uppercase; letter-spacing: 0.06em; }
+/* a gold rubber stamp, slightly tilted, once a player's submission is in */
+.stamp {
+  align-self: flex-start;
+  padding: 0.05rem 0.7rem;
+  border: 3px solid #7a5a14;
+  border-radius: 4px;
+  color: #7a5a14;
+  background: rgba(217, 178, 76, 0.22);
+  font-weight: bold;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transform: rotate(-4deg);
+}
+.submitted-count { color: var(--muted); font-size: 0.8em; }
 
 /* ---- main screen: reveal stage ---- */
 .stage {

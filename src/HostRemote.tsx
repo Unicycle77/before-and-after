@@ -1,3 +1,4 @@
+import { submissionStatus } from "./submission";
 import { patchDisplay, removePlayer, setDisplay, setShowDownload } from "./session";
 import type { Session } from "./types";
 
@@ -56,12 +57,12 @@ export function HostRemote({ code, session }: { code: string; session: Session }
       <ul className="picker">
         {players.map(([uid, p]) => {
           const m = session.media?.[uid] ?? {};
-          const ready = !!m.before && !!m.after;
+          const status = submissionStatus(m);
           return (
             <li key={uid}>
-              <button disabled={!ready} onClick={() => void setDisplay(code, { uid, step: "before" })}>
+              <button disabled={status !== "submitted"} onClick={() => void setDisplay(code, { uid, step: "before" })}>
                 <span>{p.name}</span>
-                <span className="muted small">{ready ? (m.video ? "ready" : "no video yet") : `waiting: ${[!m.before && "before", !m.after && "after"].filter(Boolean).join(", ")}`}</span>
+                <span className="muted small">{status === "submitted" ? "✓ submitted" : status === "sending" ? "sending…" : "waiting"}</span>
               </button>
               <button className="x" aria-label={`Remove ${p.name}`} onClick={() => { if (confirm(`Remove ${p.name} and their video and photos? They can then rejoin fresh.`)) void removePlayer(code, uid); }}>×</button>
             </li>
