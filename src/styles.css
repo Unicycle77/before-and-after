@@ -282,7 +282,7 @@ body.idle-cursor .stage { cursor: none; }
 .review .pic {
   --bw: calc(var(--s) * 0.3);
   box-sizing: content-box;
-  width: calc(var(--s) * 4);
+  width: calc(var(--s) * 3 * var(--r, 1.3333)); /* set per photo, so the frame hugs it */
   height: calc(var(--s) * 3);
   border: var(--bw) solid transparent;
   border-image: url("./assets/frame.png") 100 / var(--bw) round;
