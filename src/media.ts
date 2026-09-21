@@ -3,8 +3,12 @@ import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { db, storage } from "./firebase";
 import type { MediaKind } from "./types";
 
-/** Downscale phone photos (often 4000px+/8MB) so uploads are quick and the TV loads them instantly. */
-async function shrinkImage(file: File, maxDim = 1920): Promise<Blob> {
+/**
+ * Downscale phone photos (often 4000px+/8MB) so uploads are quick and the TV loads them instantly.
+ * 1600px on the long side is still sharper than a 1080p screen ever shows a photo, and at quality 0.8
+ * the files are ~40% smaller than 1920px @ 0.85.
+ */
+async function shrinkImage(file: File, maxDim = 1600): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
     const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
@@ -12,7 +16,7 @@ async function shrinkImage(file: File, maxDim = 1920): Promise<Blob> {
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
     canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.8));
     if (blob) return blob;
   } catch { /* e.g. unsupported format — upload the original */ }
   return file;
