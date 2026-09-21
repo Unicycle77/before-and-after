@@ -1,5 +1,5 @@
 import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth";
-import { get, onDisconnect, onValue, ref, remove, serverTimestamp, set } from "firebase/database";
+import { get, onValue, ref, remove, serverTimestamp, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
 import type { Display, Session } from "./types";
@@ -71,9 +71,7 @@ export async function joinSession(rawCode: string, rawName: string): Promise<str
   await set(ref(db(), `sessions/${code}/players/${user.uid}`), {
     name,
     joinedAt: serverTimestamp(),
-    connected: true,
   });
-  void onDisconnect(ref(db(), `sessions/${code}/players/${user.uid}/connected`)).set(false);
   return code;
 }
 

@@ -95,7 +95,7 @@ function Tile({ player, media, onPick }: { player: Player; media: Media; onPick:
   return (
     <li>
       <button className="tile" disabled={!ready} onClick={onPick}>
-        <span className="name">{player.name}{player.connected === false ? " (away)" : ""}</span>
+        <span className="name">{player.name}</span>
         <span className="chips">
           <Chip on={!!media.before}>Before</Chip><Chip on={!!media.after}>After</Chip><Chip on={!!media.video}>Video</Chip>
         </span>

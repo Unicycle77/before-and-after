@@ -12,6 +12,7 @@ Status: nothing here is fixed yet. Notes under each item are initial diagnosis o
 - **Fix ideas:** show the real error (`NotAllowedError` vs. no `navigator.mediaDevices` on insecure origins vs. `NotFoundError`) and give a clear message for each; hide or disable 📷 when `!window.isSecureContext`; note the fallback (type the code).
 
 ### B2. A connected player shows "(away)"
+- **Status: resolved by removal.** The `connected` flag and the "(away)" label were dropped entirely (no more `onDisconnect` handler); players can rejoin freely, so presence tracking isn't needed. Notes below are kept for history.
 - **Symptom:** a player who is still actively connected shows "(away)" on the main screen.
 - **Likely cause:** `joinSession` registers `onDisconnect(...connected).set(false)`, but nothing sets `connected` back to `true` after a reconnect. Any network blip, phone sleep or tab backgrounding flips it to false permanently, and a page refresh that resumes a stored session doesn't call `joinSession` again.
 - **Code:** `src/session.ts` (`joinSession`), `src/MainScreen.tsx` (`Tile`).

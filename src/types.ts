@@ -11,7 +11,6 @@ export interface Display {
 export interface Player {
   name: string;
   joinedAt: number;
-  connected?: boolean;
 }
 
 /** Download URLs of a player's submissions. RTDB drops empty objects, so all optional. */
