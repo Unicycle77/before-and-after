@@ -20,7 +20,7 @@
   --muted: #c9b48f;
   --ok: #9be08a;
   --typewriter: "Typewriter", "Courier New", monospace;
-  --bg-image: url("./assets/background.jpg");
+  --bg-image: url("./assets/curtains.webp");
 }
 
 * { box-sizing: border-box; }
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
   color: var(--fg);
   font: 16px/1.4 system-ui, sans-serif;
-  background: linear-gradient(rgba(42, 8, 7, 0.82), rgba(42, 8, 7, 0.9)), var(--bg-image) center / cover fixed no-repeat, var(--burgundy-deep);
+  background: linear-gradient(rgba(20, 0, 0, 0.25), rgba(20, 0, 0, 0.45)), var(--bg-image) center / cover fixed no-repeat, var(--burgundy-deep);
 }
 h1, h2 { margin: 0 0 0.5rem; font-family: var(--typewriter); font-weight: normal; letter-spacing: 0.04em; }
 h1 { color: var(--gold-bright); text-shadow: 0 2px 0 #0007; }
@@ -137,7 +137,7 @@ input::placeholder { color: #8b7a63; }
   place-items: center;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.75)), linear-gradient(rgba(42, 8, 7, 0.6), rgba(42, 8, 7, 0.75)), var(--bg-image) center / cover no-repeat;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.6)), linear-gradient(rgba(20, 0, 0, 0.1), rgba(20, 0, 0, 0.25)), var(--bg-image) center / cover no-repeat;
 }
 
 /*
