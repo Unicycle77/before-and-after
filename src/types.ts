@@ -27,4 +27,6 @@ export interface Session {
   players?: Record<string, Player>;
   media?: Record<string, Media>;
   display?: Display;
+  /** Host remote toggles this to reveal the download-all button on the main screen. */
+  showDownload?: boolean;
 }

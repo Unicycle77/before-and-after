@@ -1,4 +1,4 @@
-import { patchDisplay, removePlayer, setDisplay } from "./session";
+import { patchDisplay, removePlayer, setDisplay, setShowDownload } from "./session";
 import type { Session } from "./types";
 
 /** The host's phone: pick a player, then choose what the main screen shows (before / after / side by side / video). */
@@ -59,6 +59,9 @@ export function HostRemote({ code, session }: { code: string; session: Session }
           );
         })}
       </ul>
+      <button onClick={() => void setShowDownload(code, !session.showDownload)}>
+        {session.showDownload ? "Hide" : "Show"} download button on the main screen
+      </button>
     </section>
   );
 }

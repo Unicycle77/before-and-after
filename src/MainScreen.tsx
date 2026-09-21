@@ -1,6 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
-import { CorsError, downloadAllMedia } from "./download";
+import { DownloadZip } from "./DownloadZip";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -86,40 +86,9 @@ export function MainScreen() {
           : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
         {" "}You can also click a player here.
       </p>
-      <DownloadZip code={code} players={session.players ?? {}} media={media} />
+      {session.showDownload && <DownloadZip code={code} players={session.players ?? {}} media={media} />}
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
     </main>
-  );
-}
-
-/** Saves every submitted photo and video as one zip. */
-function DownloadZip({ code, players, media }: { code: string; players: Record<string, Player>; media: Record<string, Media> }) {
-  const [progress, setProgress] = useState<[number, number]>();
-  const [error, setError] = useState<string>();
-  const fileCount = Object.keys(players).reduce((n, uid) => n + Object.keys(media[uid] ?? {}).length, 0);
-
-  async function run() {
-    setError(undefined);
-    setProgress([0, fileCount]);
-    try {
-      await downloadAllMedia(code, players, media, (done, total) => setProgress([done, total]));
-    } catch (e) {
-      setError(
-        e instanceof CorsError ? `${e.message} See "Downloading everything" in the README.`
-          : e instanceof Error ? e.message : "Download failed.",
-      );
-    } finally {
-      setProgress(undefined);
-    }
-  }
-
-  return (
-    <div className="download">
-      <button disabled={fileCount === 0 || !!progress} onClick={() => void run()}>
-        {progress ? `Zipping ${progress[0]} / ${progress[1]}…` : `⬇ Download all photos & videos (${fileCount})`}
-      </button>
-      {error && <p className="error small">{error}</p>}
-    </div>
   );
 }
 

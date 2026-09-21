@@ -117,6 +117,9 @@ export const removePlayer = async (code: string, uid: string) => {
 export const setDisplay = (code: string, display: Display) =>
   set(ref(db(), `sessions/${code}/display`), display);
 
+export const setShowDownload = (code: string, show: boolean) =>
+  set(ref(db(), `sessions/${code}/showDownload`), show);
+
 /** Changes part of the display (e.g. play/pause) without resetting the rest. */
 export const patchDisplay = (code: string, patch: Partial<Display>) =>
   update(ref(db(), `sessions/${code}/display`), patch);
