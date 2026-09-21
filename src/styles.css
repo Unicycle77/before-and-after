@@ -156,7 +156,7 @@ input::placeholder { color: #8b7a63; }
   line-height: 0;
   opacity: 0;
 }
-.frame.ready { opacity: 1; animation: hang 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+.frame.ready { opacity: 1; animation: hang 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards; }
 .frame img, .frame video {
   display: block;
   aspect-ratio: var(--ratio, 1);
@@ -168,6 +168,13 @@ input::placeholder { color: #8b7a63; }
     width: min(calc(100vw - 2 * var(--bw) - var(--pad)), calc((100dvh - 2 * var(--bw) - var(--pad)) * var(--ratio, 1)));
   }
 }
+/* side by side: two frames share the width; each is sized to fit its half */
+.stage.both { display: flex; align-items: center; justify-content: center; gap: 1vw; padding: 0 1vw; }
+.stage.both .frame { --bw: clamp(18px, 4.5vmin, 64px); --pad: 12px; }
+.stage.both .frame img {
+  width: min(calc((100vw - 4vw) / 2 - 2 * var(--bw) - var(--pad)), calc((100vh - 2 * var(--bw) - var(--pad)) * var(--ratio, 1)));
+}
+.stage.both .frame.ready:nth-child(2) { animation-delay: 0.25s; }
 @keyframes hang {
   0% { opacity: 0; transform: translateY(-6vh) rotate(-2.5deg) scale(0.94); }
   60% { opacity: 1; transform: translateY(0.6vh) rotate(0.6deg) scale(1.01); }

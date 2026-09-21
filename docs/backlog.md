@@ -28,6 +28,7 @@ Status: nothing here is fixed yet. Notes under each item are initial diagnosis o
 ## Enhancements
 
 ### E1. Side-by-side Before/After view
+- **Status: built (not yet verified live).** New `both` step: the host remote shows "Show before & after side by side" on After, and "Watch the video" works from either view. Each frame is sized to fit its half of the screen.
 - Add a button (on the host remote, shown once After has been revealed) that shows Before and After next to each other on the main screen.
 - **Design:** add a `"both"` step to `Step` (`src/types.ts`); the main screen renders two images in a row, each scaled to fit its half; `HostRemote` adds "Show side by side" while on `after` (and a way back to the individual view, and on to the video).
 - Decide the button flow: Before → After → (Side by side) → Video, with "Video" reachable from both `after` and `both`.

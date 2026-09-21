@@ -2,7 +2,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
-import type { Display, Media, Player } from "./types";
+import type { Display, Media, Player, Step } from "./types";
 
 const KEY = "ba.hostCode";
 
@@ -109,10 +109,18 @@ const Chip = ({ on, children }: { on: boolean; children: string }) => (
 );
 
 /** Full-screen presentation of one player's before / after / video, in a gold frame. */
-function Stage({ code, name, step, media, display }: { code: string; name: string; step: "before" | "after" | "video"; media: Media; display: Display }) {
+function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list">; media: Media; display: Display }) {
+  const both = step === "both";
   return (
-    <main className="stage">
-      {step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
+    <main className={both ? "stage both" : "stage"}>
+      {both ? (["before", "after"] as const).map((kind) => (
+        <Framed key={kind}>
+          {(setRatio) => (
+            <img src={media[kind]} alt={`${name} ${kind}`}
+              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} />
+          )}
+        </Framed>
+      )) : step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
           onEnded={() => void patchDisplay(code, { playing: false })} /> : (
         <Framed key={step}>
           {(setRatio) => (
@@ -121,7 +129,7 @@ function Stage({ code, name, step, media, display }: { code: string; name: strin
           )}
         </Framed>
       )}
-      <div className="stage-label"><span>{step}</span> · {name}</div>
+      <div className="stage-label"><span>{both ? "before & after" : step}</span> · {name}</div>
     </main>
   );
 }

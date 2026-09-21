@@ -1,7 +1,7 @@
 export type MediaKind = "before" | "after" | "video";
 
 /** What the main screen is showing. Only host / first-player may write this. */
-export type Step = "list" | MediaKind;
+export type Step = "list" | "before" | "after" | "both" | "video";
 
 export interface Display {
   uid?: string;

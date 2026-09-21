@@ -13,7 +13,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
     return (
       <section className="remote">
         <h2>{current.name}</h2>
-        <p className="muted">Main screen is showing: <strong>{display.step.toUpperCase()}</strong></p>
+        <p className="muted">Main screen is showing: <strong>{display.step === "both" ? "BEFORE & AFTER" : display.step.toUpperCase()}</strong></p>
         {display.step === "before" && <button className="big" onClick={() => void setDisplay(code, { uid, step: "after" })}>Reveal AFTER ▶</button>}
         {display.step === "after" && (
           <>
@@ -21,6 +21,15 @@ export function HostRemote({ code, session }: { code: string; session: Session }
             <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
               {currentMedia?.video ? "▶ Watch the video" : "No video submitted"}
             </button>
+            <button onClick={() => void setDisplay(code, { uid, step: "both" })}>◫ Show before &amp; after side by side</button>
+          </>
+        )}
+        {display.step === "both" && (
+          <>
+            <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
+              {currentMedia?.video ? "▶ Watch the video" : "No video submitted"}
+            </button>
+            <button onClick={() => void setDisplay(code, { uid, step: "after" })}>← Back to After</button>
           </>
         )}
         {display.step === "video" && (
