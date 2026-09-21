@@ -1,6 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
-import { PUBLIC_URL, joinUrlFor } from "./firebase";
+import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, resetController, setDisplay, store, useSession } from "./session";
 import type { Media, Player } from "./types";
 
@@ -57,7 +57,18 @@ export function MainScreen() {
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>
-        <QRCodeSVG value={joinUrlFor(code)} size={150} bgColor="#fff" marginSize={2} />
+        <div className="qrs">
+          <figure>
+            <QRCodeSVG value={joinUrlFor(code)} size={300} bgColor="#fff" marginSize={2} />
+            <figcaption>Players scan here</figcaption>
+          </figure>
+          {!session.controllerUid && (
+            <figure className="host-qr">
+              <QRCodeSVG value={hostUrlFor(code)} size={150} bgColor="#fff" marginSize={2} />
+              <figcaption>Host scans here</figcaption>
+            </figure>
+          )}
+        </div>
       </header>
 
       <h2>Players ({players.length})</h2>

@@ -88,7 +88,7 @@ input::placeholder { color: #8b7a63; }
 
 /* ---- main screen: lobby ---- */
 .lobby { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-.lobby header { display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+.lobby header { display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap; }
 .lobby h1 { font-size: 3rem; }
 .code {
   font-family: var(--typewriter);
@@ -98,7 +98,11 @@ input::placeholder { color: #8b7a63; }
   color: var(--gold-bright);
   text-shadow: 0 3px 0 #0008, 0 0 24px #d9b24c55;
 }
-.lobby svg { border-radius: 4px; border: 6px solid var(--gold); background: #fff; box-shadow: 0 6px 18px #000a; }
+.lobby svg { flex-shrink: 0; border-radius: 4px; border: 6px solid var(--gold); background: #fff; box-shadow: 0 6px 18px #000a; }
+.qrs { display: flex; align-items: flex-end; gap: 1.5rem; }
+.qrs figure { margin: 0; display: grid; gap: 0.4rem; justify-items: center; }
+.qrs figcaption { font-family: var(--typewriter); color: var(--gold-bright); letter-spacing: 0.05em; }
+.host-qr svg { border-color: var(--paper); }
 .tiles, .picker { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
 .tiles { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; padding-top: 0.5rem; }
 

@@ -31,3 +31,4 @@ export const storage = () => getStorage(need(app));
 /** Base URL players are sent to. */
 export const PUBLIC_URL: string = (import.meta.env.VITE_PUBLIC_URL as string | undefined) || window.location.origin;
 export const joinUrlFor = (code: string) => `${PUBLIC_URL}/play?code=${code}`;
+export const hostUrlFor = (code: string) => `${PUBLIC_URL}/host?code=${code}`;

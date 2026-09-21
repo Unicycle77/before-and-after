@@ -37,6 +37,7 @@ Status: nothing here is fixed yet. Notes under each item are initial diagnosis o
 - **Files:** `src/styles.css` (`.stage`, `.stage img`, `.stage video`, `.stage-label`), `src/MainScreen.tsx` (`Stage`).
 
 ### E3. Larger player QR code, plus a host QR code until a host connects
+- **Status: built (not yet verified live).** Player QR is 300px; the host QR (150px, labelled "Host scans here") shows only while no host remote is connected and reappears after Reset. It opens `/host?code=<CODE>` with the code pre-filled; the host still taps Connect (no auto-connect, on purpose, until the PIN in E4 exists).
 - **Player QR:** make it twice as big (currently `size={150}` in `src/MainScreen.tsx`, so 300). Check the lobby header layout still works at that size on a laptop and TV (the 5rem join code sits beside it), and that it stays scannable from across a room.
 - **Host QR:** show a second QR code that opens `/host?code=<CODE>` while `session.controllerUid` is unset, and hide it once a host has connected. `HostPage` already reads `?code=` and pre-fills it, but the host still has to tap Connect. Consider auto-connecting when the code comes from the URL. Caveat: while it's displayed, any player could scan it and claim the host slot (see the host-claim gap in the deploy notes), so hiding it as soon as a host connects matters, and a short PIN would close the gap properly.
 - **Design:** label the two codes clearly ("Players scan here" / "Host scan here") and make them visually distinct, so nobody scans the wrong one. When Reset is clicked, the host QR should reappear.
