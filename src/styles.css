@@ -241,3 +241,5 @@ button .muted { color: #7a6a55; }
   border-color: #7a5a14;
   font-weight: bold;
 }
+
+.download { margin-top: 2rem; display: grid; gap: 0.4rem; justify-items: start; }

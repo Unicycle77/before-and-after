@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://before-and-after-6a096.web.app", "https://before-and-after-6a096.firebaseapp.com", "http://localhost:5173"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
