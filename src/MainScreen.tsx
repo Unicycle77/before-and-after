@@ -5,7 +5,7 @@ import { Jukebox } from "./Jukebox";
 import { Review } from "./Review";
 import { StageControls } from "./StageControls";
 import { SafeImg } from "./SafeImg";
-import { preloadImages } from "./preload";
+import { playableVideoUrl, preloadImages, preloadVideo } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -25,6 +25,12 @@ export function MainScreen() {
   useEffect(() => {
     preloadImages(photoUrls.split("\n"));
   }, [photoUrls]);
+
+  // Once a player is picked, start fetching their video in the background: by the time the host
+  // gets to "Video" (after the before/after discussion) it plays instantly from memory.
+  const pickedUid = session?.display?.uid;
+  const pickedVideo = pickedUid ? session?.media?.[pickedUid]?.video : undefined;
+  useEffect(() => { preloadVideo(pickedVideo); }, [pickedVideo]);
 
   // Resume a stored session on refresh; drop it if it's gone or isn't ours.
   useEffect(() => {
@@ -192,6 +198,8 @@ function Framed({ children }: { children: (setRatio: (r: number) => void) => Rea
 function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: boolean; restartAt?: number; onEnded: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
+  // Use the preloaded in-memory copy if it is ready when the video starts; never swap sources mid-play.
+  const [playable] = useState(() => (src ? playableVideoUrl(src) : ""));
 
   useEffect(() => {
     const v = ref.current;
@@ -224,7 +232,7 @@ function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: bo
     <>
       <Framed>
         {(setRatio) => (
-          <video ref={ref} src={src} playsInline onEnded={onEnded}
+          <video ref={ref} src={playable} playsInline onEnded={onEnded}
             onLoadedMetadata={(e) => setRatio(e.currentTarget.videoWidth / e.currentTarget.videoHeight)} />
         )}
       </Framed>
