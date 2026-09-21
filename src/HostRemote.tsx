@@ -1,4 +1,6 @@
-import { patchDisplay, removePlayer, setDisplay, setShowDownload } from "./session";
+import { useEffect, useRef, useState } from "react";
+import { patchDisplay, removePlayer, setDisplay, setShowDownload, setVideoGain } from "./session";
+import { DEFAULT_VIDEO_GAIN, MAX_VIDEO_GAIN, MIN_VIDEO_GAIN } from "./videoAudio";
 import type { Session } from "./types";
 
 /** The host's phone: pick a player, then choose what the main screen shows (before / after / side by side / video). */
@@ -35,6 +37,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
           </button>
           <button disabled={display.step !== "video"} onClick={() => void patchDisplay(code, { playing: true, restartAt: Date.now() })}>↺ Restart</button>
         </div>
+        <VideoVolume code={code} gain={session.videoGain ?? DEFAULT_VIDEO_GAIN} />
         <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
       </section>
     );
@@ -72,5 +75,22 @@ export function HostRemote({ code, session }: { code: string; session: Session }
         {session.showDownload ? "Hide" : "Show"} download button on the main screen
       </button>
     </section>
+  );
+}
+
+/** How loud the video is on the main screen (phone videos are recorded quiet, so it defaults to a boost). */
+function VideoVolume({ code, gain }: { code: string; gain: number }) {
+  const [value, setValue] = useState(gain);
+  const timer = useRef<number>();
+  useEffect(() => { setValue(gain); }, [gain]);
+  function change(v: number) {
+    setValue(v);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => void setVideoGain(code, v), 120);
+  }
+  return (
+    <label className="volume">🔊 Video volume: {Math.round(value * 100)}%
+      <input type="range" min={MIN_VIDEO_GAIN} max={MAX_VIDEO_GAIN} step={0.25} value={value} onChange={(e) => change(Number(e.target.value))} />
+    </label>
   );
 }
