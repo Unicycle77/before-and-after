@@ -125,9 +125,6 @@ export const leaveSession = removePlayer;
 export const setDisplay = (code: string, display: Display) =>
   set(ref(db(), `sessions/${code}/display`), display);
 
-export const setVideoGain = (code: string, gain: number) =>
-  set(ref(db(), `sessions/${code}/videoGain`), gain);
-
 export const setShowDownload = (code: string, show: boolean) =>
   set(ref(db(), `sessions/${code}/showDownload`), show);
 

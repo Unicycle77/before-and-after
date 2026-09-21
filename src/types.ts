@@ -39,7 +39,5 @@ export interface Session {
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;
-  /** Volume boost for the main-screen video (1 = normal), set from the host remote. */
-  videoGain?: number;
   jukebox?: Jukebox;
 }

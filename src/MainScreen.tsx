@@ -6,7 +6,6 @@ import { Review } from "./Review";
 import { StageControls } from "./StageControls";
 import { SafeImg } from "./SafeImg";
 import { playableVideoUrl, preloadImages, preloadVideo } from "./preload";
-import { type Boost, DEFAULT_VIDEO_GAIN, attachBoost } from "./videoAudio";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -80,7 +79,7 @@ export function MainScreen() {
   if (display.step !== "list" && shown && shownMedia) {
     return (
       <>
-        <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} videoGain={session.videoGain ?? DEFAULT_VIDEO_GAIN} />
+        <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} />
         <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi={false} />
       </>
     );
@@ -150,9 +149,7 @@ const Chip = ({ on, children }: { on: boolean; children: string }) => (
 );
 
 /** Full-screen presentation of one player's before / after / video, in a gold frame. */
-function Stage({ code, name, step, media, display, videoGain }: {
-  code: string; name: string; step: Exclude<Step, "list" | "review">; media: Media; display: Display; videoGain: number;
-}) {
+function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list" | "review">; media: Media; display: Display }) {
   const both = step === "both";
   return (
     <main className={both ? "stage both" : "stage"}>
@@ -164,7 +161,7 @@ function Stage({ code, name, step, media, display, videoGain }: {
               onFail={() => setRatio(4 / 3)} />
           )}
         </Framed>
-      )) : step === "video" ? <Video key="video" src={media.video} gain={videoGain} playing={display.playing !== false} restartAt={display.restartAt}
+      )) : step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
           onEnded={() => void patchDisplay(code, { playing: false })} /> : (
         <Framed key={step}>
           {(setRatio) => (
@@ -198,44 +195,21 @@ function Framed({ children }: { children: (setRatio: (r: number) => void) => Rea
  * `display`. Chrome blocks autoplay with sound until the page has had a click; if that
  * happens we start muted (so the host's Play still works) and unmute on the next click.
  */
-function Video({ src, gain, playing, restartAt, onEnded }: { src?: string; gain: number; playing: boolean; restartAt?: number; onEnded: () => void }) {
+function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: boolean; restartAt?: number; onEnded: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
   // Use the preloaded in-memory copy if it is ready when the video starts; never swap sources mid-play.
   const [playable] = useState(() => (src ? playableVideoUrl(src) : ""));
 
-  // Amplify the video's (usually quiet) sound. Must be wired up before playback starts.
-  const boostReady = useRef<Promise<Boost | undefined>>();
-  const boost = useRef<Boost>();
-  const gainRef = useRef(gain);
-  gainRef.current = gain;
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    let cancelled = false;
-    boostReady.current = attachBoost(v, gainRef.current).then((b) => {
-      if (cancelled) { b?.detach(); return undefined; }
-      boost.current = b;
-      return b;
-    });
-    return () => { cancelled = true; boost.current?.detach(); boost.current = undefined; };
-  }, []);
-  useEffect(() => { boost.current?.setGain(gain); }, [gain]);
-
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     if (!playing) { v.pause(); return; }
-    let stale = false;
-    void (boostReady.current ?? Promise.resolve(undefined)).then(() => {
-      if (stale) return;
-      v.play().catch(() => {
-        v.muted = true;
-        setMuted(true);
-        v.play().catch(() => {});
-      });
+    v.play().catch(() => {
+      v.muted = true;
+      setMuted(true);
+      v.play().catch(() => {});
     });
-    return () => { stale = true; };
   }, [playing, src]);
 
   useEffect(() => {
