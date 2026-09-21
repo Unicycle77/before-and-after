@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QrScannerModal } from "./QrScannerModal";
-import { extractFrames } from "./frames";
+import { FrameError, extractFrames } from "./frames";
 import { submitMedia } from "./media";
 import { JoinError, extractCode, joinSession, leaveSession, store, useSession, useUid } from "./session";
 
@@ -88,9 +88,9 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
   const mine = session.media?.[uid] ?? {};
   const [picked, setPicked] = useState<Picked>();
   const [checking, setChecking] = useState(false);
-  const [landscape, setLandscape] = useState(false); // stack the previews full-width for landscape video
   const [progress, setProgress] = useState<number>();
   const [error, setError] = useState<string>();
+  const [detail, setDetail] = useState<string>();
   const camera = useRef<HTMLInputElement>(null);
   const library = useRef<HTMLInputElement>(null);
   const pickedRef = useRef<Picked>();
@@ -108,6 +108,7 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
     if (!file) return;
     discard();
     setError(undefined);
+    setDetail(undefined);
     setChecking(true);
     try {
       const { first, last } = await extractFrames(file);
@@ -115,8 +116,9 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
         file, first, last,
         videoUrl: URL.createObjectURL(file), firstUrl: URL.createObjectURL(first), lastUrl: URL.createObjectURL(last),
       });
-    } catch {
-      setError("We couldn't read that video. Please record it again.");
+    } catch (e) {
+      setError(e instanceof FrameError ? e.message : "We couldn't read that video. Please record it again.");
+      setDetail(e instanceof FrameError ? e.detail : undefined);
     } finally {
       setChecking(false);
     }
@@ -151,8 +153,8 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
 
       <section className="slot">
         <h2>Your Before &amp; After</h2>
-        <div className={landscape ? "pair-preview stacked" : "pair-preview"}>
-          <figure>{beforeUrl ? <img src={beforeUrl} alt="Before" onLoad={(e) => setLandscape(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight)} /> : <div className="ph">Before</div>}<figcaption>Before</figcaption></figure>
+        <div className="pair-preview">
+          <figure>{beforeUrl ? <img src={beforeUrl} alt="Before" /> : <div className="ph">Before</div>}<figcaption>Before</figcaption></figure>
           <figure>{afterUrl ? <img src={afterUrl} alt="After" /> : <div className="ph">After</div>}<figcaption>After</figcaption></figure>
         </div>
         <p className="muted small slot-hint">
@@ -177,6 +179,7 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
         <input ref={camera} type="file" accept="video/*" capture="environment" hidden onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
         <input ref={library} type="file" accept="video/*" hidden onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
         {error && <p className="error">{error}</p>}
+        {detail && <p className="muted small tech-detail">Technical details (send to the host): {detail}</p>}
       </section>
 
       <button className="link" onClick={onLeave}>Leave session</button>
