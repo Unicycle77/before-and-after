@@ -1,5 +1,5 @@
 import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth";
-import { get, onValue, ref, remove, serverTimestamp, set } from "firebase/database";
+import { get, onValue, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
 import type { Display, Session } from "./types";
@@ -116,6 +116,10 @@ export const removePlayer = async (code: string, uid: string) => {
 
 export const setDisplay = (code: string, display: Display) =>
   set(ref(db(), `sessions/${code}/display`), display);
+
+/** Changes part of the display (e.g. play/pause) without resetting the rest. */
+export const patchDisplay = (code: string, patch: Partial<Display>) =>
+  update(ref(db(), `sessions/${code}/display`), patch);
 
 /** `undefined` while loading, `null` if the session doesn't exist. */
 export function useSession(code: string | undefined): Session | null | undefined {

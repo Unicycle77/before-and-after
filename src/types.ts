@@ -6,6 +6,10 @@ export type Step = "list" | MediaKind;
 export interface Display {
   uid?: string;
   step: Step;
+  /** Video step only: the host remote's play/pause. Treated as playing when absent. */
+  playing?: boolean;
+  /** Video step only: set to a new timestamp to restart from the beginning. */
+  restartAt?: number;
 }
 
 export interface Player {

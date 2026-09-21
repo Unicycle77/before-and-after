@@ -1,8 +1,8 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
-import { createSession, ensureSignedIn, resetController, setDisplay, store, useSession } from "./session";
-import type { Media, Player } from "./types";
+import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
+import type { Display, Media, Player } from "./types";
 
 const KEY = "ba.hostCode";
 
@@ -46,7 +46,7 @@ export function MainScreen() {
   const shownMedia = display.uid ? media[display.uid] : undefined;
 
   if (display.step !== "list" && shown && shownMedia) {
-    return <Stage name={shown.name} step={display.step} media={shownMedia} />;
+    return <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} />;
   }
 
   return (
@@ -109,10 +109,11 @@ const Chip = ({ on, children }: { on: boolean; children: string }) => (
 );
 
 /** Full-screen presentation of one player's before / after / video, in a gold frame. */
-function Stage({ name, step, media }: { name: string; step: "before" | "after" | "video"; media: Media }) {
+function Stage({ code, name, step, media, display }: { code: string; name: string; step: "before" | "after" | "video"; media: Media; display: Display }) {
   return (
     <main className="stage">
-      {step === "video" ? <Video key="video" src={media.video} /> : (
+      {step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
+          onEnded={() => void patchDisplay(code, { playing: false })} /> : (
         <Framed key={step}>
           {(setRatio) => (
             <img src={media[step]} alt={`${name} ${step}`}
@@ -138,20 +139,47 @@ function Framed({ children }: { children: (setRatio: (r: number) => void) => Rea
   );
 }
 
-function Video({ src }: { src?: string }) {
+/**
+ * Video with no on-screen controls: the host's phone drives play/pause/restart via
+ * `display`. Chrome blocks autoplay with sound until the page has had a click; if that
+ * happens we start muted (so the host's Play still works) and unmute on the next click.
+ */
+function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: boolean; restartAt?: number; onEnded: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [blocked, setBlocked] = useState(false);
-  useEffect(() => { ref.current?.play().catch(() => setBlocked(true)); }, [src]);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (!playing) { v.pause(); return; }
+    v.play().catch(() => {
+      v.muted = true;
+      setMuted(true);
+      v.play().catch(() => {});
+    });
+  }, [playing, src]);
+
+  useEffect(() => {
+    if (restartAt && ref.current) ref.current.currentTime = 0;
+  }, [restartAt]);
+
+  useEffect(() => {
+    if (!muted) return;
+    const unmute = () => { if (ref.current) ref.current.muted = false; setMuted(false); };
+    document.addEventListener("click", unmute, { once: true });
+    return () => document.removeEventListener("click", unmute);
+  }, [muted]);
+
   if (!src) return <p className="muted">No video was submitted.</p>;
   return (
     <>
       <Framed>
         {(setRatio) => (
-          <video ref={ref} src={src} controls playsInline autoPlay onPlay={() => setBlocked(false)}
+          <video ref={ref} src={src} playsInline onEnded={onEnded}
             onLoadedMetadata={(e) => setRatio(e.currentTarget.videoWidth / e.currentTarget.videoHeight)} />
         )}
       </Framed>
-      {blocked && <button className="big overlay" onClick={() => void ref.current?.play()}>▶ Play video</button>}
+      {muted && <div className="sound-hint">🔇 Click anywhere on this screen once to turn the sound on</div>}
     </>
   );
 }

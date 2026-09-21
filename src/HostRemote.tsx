@@ -1,4 +1,4 @@
-import { removePlayer, setDisplay } from "./session";
+import { patchDisplay, removePlayer, setDisplay } from "./session";
 import type { Session } from "./types";
 
 /** The host's phone: pick a player, then advance before → after → video on the main screen. */
@@ -18,12 +18,20 @@ export function HostRemote({ code, session }: { code: string; session: Session }
         {display.step === "after" && (
           <>
             <p className="muted">Talk it over, then when everyone's ready:</p>
-            <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video" })}>
+            <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
               {currentMedia?.video ? "▶ Watch the video" : "No video submitted"}
             </button>
           </>
         )}
-        {display.step === "video" && <button className="big" onClick={() => void setDisplay(code, { uid, step: "after" })}>↺ Back to After</button>}
+        {display.step === "video" && (
+          <>
+            <button className="big" onClick={() => void patchDisplay(code, { playing: display.playing === false })}>
+              {display.playing === false ? "▶ Play" : "⏸ Pause"}
+            </button>
+            <button onClick={() => void patchDisplay(code, { playing: true, restartAt: Date.now() })}>↺ Restart video</button>
+            <button onClick={() => void setDisplay(code, { uid, step: "after" })}>← Back to After</button>
+          </>
+        )}
         <button onClick={() => void setDisplay(code, { uid, step: "before" })}>Show Before again</button>
         <button onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
       </section>

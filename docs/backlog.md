@@ -19,6 +19,7 @@ Status: nothing here is fixed yet. Notes under each item are initial diagnosis o
 - **Fix idea:** keep a `.info/connected` listener while a player is on the play page. On every (re)connect, register the `onDisconnect` handler and then set `connected: true`. Also do this on resume. Consider ignoring brief `false` values on the display, or dropping "away" entirely if it isn't useful.
 
 ### B3. Video controls must never show on the main screen
+- **Status: built (not yet verified live).** The main-screen `<video>` has no controls. The host remote's video panel has Pause/Play, Restart and Back to After, driven by `display.playing` / `display.restartAt`. If Chrome blocks autoplay-with-sound (e.g. after a page refresh with no click), the video starts muted and a hint asks for one click on the main screen to unmute. No rules change needed.
 - **Symptom:** the `<video>` on the main screen shows browser controls. The host controls playback from their phone.
 - **Code:** `src/MainScreen.tsx` (`Video` component uses `controls`).
 - **Fix idea:** remove `controls`. The main-screen player then needs commands from the host remote, so extend the `display` state, for example `videoPlaying: boolean` (and possibly a seek or restart command), and add Play/Pause/Restart buttons to `HostRemote`. The main screen reacts to those values. Watch the rules (`display` is already writable by the controller).

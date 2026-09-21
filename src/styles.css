@@ -195,7 +195,7 @@ input::placeholder { color: #8b7a63; }
   z-index: 1;
 }
 .stage-label span { text-transform: uppercase; color: var(--burgundy); font-weight: bold; }
-.overlay { position: absolute; width: auto !important; z-index: 2; }
+.sound-hint { position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 2; background: var(--paper); color: var(--ink); border: 2px solid var(--gold-dark); padding: 0.4rem 1rem; font-family: var(--typewriter); box-shadow: 0 4px 10px #000a; }
 
 /* ---- phones ---- */
 .join, .phone { max-width: 480px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; align-content: start; }
