@@ -1,6 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { DownloadZip } from "./DownloadZip";
+import { StageControls } from "./StageControls";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -132,6 +133,7 @@ function Stage({ code, name, step, media, display }: { code: string; name: strin
         </Framed>
       )}
       <div className="stage-label"><span>{both ? "before & after" : step}</span> · {name}</div>
+      <StageControls code={code} display={display} hasVideo={!!media.video} />
     </main>
   );
 }
@@ -177,7 +179,11 @@ function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: bo
     if (!muted) return;
     const unmute = () => { if (ref.current) ref.current.muted = false; setMuted(false); };
     document.addEventListener("click", unmute, { once: true });
-    return () => document.removeEventListener("click", unmute);
+    document.addEventListener("keydown", unmute, { once: true });
+    return () => {
+      document.removeEventListener("click", unmute);
+      document.removeEventListener("keydown", unmute);
+    };
   }, [muted]);
 
   if (!src) return <p className="muted">No video was submitted.</p>;
