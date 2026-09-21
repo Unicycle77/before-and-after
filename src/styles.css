@@ -334,8 +334,11 @@ body.idle-cursor .stage { cursor: none; }
 @media (prefers-reduced-motion: reduce) { .review-cell { animation: none; } }
 .img-failed { display: grid; place-items: center; width: 100%; height: 100%; min-width: 12rem; min-height: 8rem; color: var(--muted); font-family: var(--typewriter); }
 .slot .slot-hint { color: #6b5a44; margin: 0; }
-.pair-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.pair-preview figure { margin: 0; display: grid; gap: 0.3rem; text-align: center; }
-.pair-preview img, .pair-preview .ph { width: 100%; height: 30vh; object-fit: contain; background: #000; border: 3px solid var(--gold); border-radius: 2px; }
-.pair-preview .ph { display: grid; place-items: center; color: var(--muted); font-family: var(--typewriter); border-style: dashed; }
+.pair-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; align-items: start; }
+.pair-preview figure { margin: 0; display: grid; gap: 0.3rem; justify-items: center; text-align: center; }
+/* each preview takes the shape of its own image (landscape stays landscape, portrait stays portrait) */
+.pair-preview img { display: block; width: auto; height: auto; max-width: 100%; max-height: 40vh; background: #000; border: 3px solid var(--gold); border-radius: 2px; }
+.pair-preview .ph { width: 100%; aspect-ratio: 4 / 3; display: grid; place-items: center; background: #000; color: var(--muted); font-family: var(--typewriter); border: 3px dashed var(--gold); border-radius: 2px; }
 .pair-preview figcaption { font-family: var(--typewriter); color: var(--burgundy); }
+.pair-preview.stacked { grid-template-columns: 1fr; }
+.pair-preview.stacked img { max-height: 30vh; }

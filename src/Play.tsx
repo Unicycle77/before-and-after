@@ -88,6 +88,7 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
   const mine = session.media?.[uid] ?? {};
   const [picked, setPicked] = useState<Picked>();
   const [checking, setChecking] = useState(false);
+  const [landscape, setLandscape] = useState(false); // stack the previews full-width for landscape video
   const [progress, setProgress] = useState<number>();
   const [error, setError] = useState<string>();
   const camera = useRef<HTMLInputElement>(null);
@@ -150,8 +151,8 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
 
       <section className="slot">
         <h2>Your Before &amp; After</h2>
-        <div className="pair-preview">
-          <figure>{beforeUrl ? <img src={beforeUrl} alt="Before" /> : <div className="ph">Before</div>}<figcaption>Before</figcaption></figure>
+        <div className={landscape ? "pair-preview stacked" : "pair-preview"}>
+          <figure>{beforeUrl ? <img src={beforeUrl} alt="Before" onLoad={(e) => setLandscape(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight)} /> : <div className="ph">Before</div>}<figcaption>Before</figcaption></figure>
           <figure>{afterUrl ? <img src={afterUrl} alt="After" /> : <div className="ph">After</div>}<figcaption>After</figcaption></figure>
         </div>
         <p className="muted small slot-hint">
