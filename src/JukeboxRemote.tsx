@@ -2,11 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import { setJukeboxState } from "./session";
 import type { Session } from "./types";
 
+/** m:ss (or h:mm:ss); blank when unknown. */
+function fmt(seconds: number | undefined): string {
+  if (!seconds || seconds < 0) return "";
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+}
+
+const asNums = (v: unknown): number[] => (Array.isArray(v) ? (v as number[]) : Object.values((v ?? {}) as Record<string, number>));
+
 const asList = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : Object.values((v ?? {}) as Record<string, string>));
 
 /** The host's phone: pick songs and control the main-screen jukebox. */
 export function JukeboxRemote({ code, session }: { code: string; session: Session }) {
   const tracks = asList(session.jukebox?.tracks);
+  const durations = asNums(session.jukebox?.durations);
   const state = session.jukebox?.state ?? {};
   const current = state.current;
   const playing = state.playing === true;
@@ -50,7 +61,10 @@ export function JukeboxRemote({ code, session }: { code: string; session: Sessio
       <ul className="tracklist">
         {tracks.map((t, i) => (
           <li key={i}>
-            <button className={i === current ? "active" : ""} onClick={() => play(i)}>{i === current ? "♪ " : ""}{t}</button>
+            <button className={i === current ? "active" : ""} onClick={() => play(i)}>
+              <span className="title">{i === current ? "♪ " : ""}{t}</span>
+              <span className="dur">{fmt(durations[i])}</span>
+            </button>
           </li>
         ))}
       </ul>

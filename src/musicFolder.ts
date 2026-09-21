@@ -50,6 +50,41 @@ export async function scanFolder(dir: DirHandle): Promise<Track[]> {
   return tracks.sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
 }
 
+/** Song length in whole seconds (0 if it can't be read). Reads metadata only. */
+function readDuration(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    let finished = false;
+    const finish = (seconds: number) => {
+      if (finished) return;
+      finished = true;
+      URL.revokeObjectURL(url);
+      audio.removeAttribute("src");
+      resolve(seconds);
+    };
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => finish(Number.isFinite(audio.duration) ? Math.round(audio.duration) : 0);
+    audio.onerror = () => finish(0);
+    window.setTimeout(() => finish(0), 8000);
+    audio.src = url;
+  });
+}
+
+/** Durations (seconds) for every track, in the same order; unreadable ones are 0. */
+export async function readDurations(tracks: Track[], concurrency = 6): Promise<number[]> {
+  const out: number[] = new Array(tracks.length).fill(0);
+  let next = 0;
+  async function worker() {
+    while (next < tracks.length) {
+      const i = next++;
+      try { out[i] = await readDuration(await tracks[i]!.handle.getFile()); } catch { out[i] = 0; }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, tracks.length) }, worker));
+  return out;
+}
+
 // ---- remembering the folder across refreshes ----
 const DB = "before-and-after";
 const STORE = "handles";

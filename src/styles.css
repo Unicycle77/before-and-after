@@ -270,3 +270,6 @@ body.idle-cursor .stage { cursor: none; }
 .tracklist { list-style: none; margin: 0; padding: 0; max-height: 45vh; overflow: auto; display: grid; gap: 0.4rem; }
 .tracklist button { width: 100%; text-align: left; padding: 0.6rem 0.8rem; }
 .tracklist button.active { background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f); border-color: #7a5a14; font-weight: bold; }
+.tracklist button { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
+.tracklist .title { min-width: 0; overflow-wrap: anywhere; }
+.tracklist .dur { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.75; }

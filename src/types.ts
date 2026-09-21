@@ -23,6 +23,8 @@ export type Media = Partial<Record<MediaKind, string>>;
 export interface Jukebox {
   /** Song titles, published by the main screen (the files stay on that PC). */
   tracks?: string[];
+  /** Song lengths in seconds, same order as `tracks` (0 = unknown). */
+  durations?: number[];
   /** Playback state, written by the host remote (and by the main screen when a song ends). */
   state?: { current?: number; playing?: boolean; volume?: number; repeat?: boolean };
 }

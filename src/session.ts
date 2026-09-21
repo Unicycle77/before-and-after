@@ -124,6 +124,10 @@ export const setShowDownload = (code: string, show: boolean) =>
 export const publishTracks = (code: string, titles: string[]) =>
   set(ref(db(), `sessions/${code}/jukebox/tracks`), titles);
 
+/** Main screen: publishes song lengths in seconds (same order as the titles); null clears them. */
+export const publishDurations = (code: string, seconds: number[] | null) =>
+  set(ref(db(), `sessions/${code}/jukebox/durations`), seconds);
+
 /** Changes part of the jukebox playback state (current song, playing, volume). */
 export const setJukeboxState = (code: string, patch: Partial<NonNullable<Jukebox["state"]>>) =>
   update(ref(db(), `sessions/${code}/jukebox/state`), patch);

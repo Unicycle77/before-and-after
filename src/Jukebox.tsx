@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
   type DirHandle, type Track, folderPickerSupported, hasAccess, pickFolder, recallFolder,
-  rememberFolder, requestAccess, scanFolder,
+  readDurations, rememberFolder, requestAccess, scanFolder,
 } from "./musicFolder";
-import { publishTracks, setJukeboxState } from "./session";
+import { publishDurations, publishTracks, setJukeboxState } from "./session";
 import type { Jukebox as JukeboxData } from "./types";
 
 /**
@@ -18,6 +18,7 @@ export function Jukebox({ code, jukebox, duck, showUi }: { code: string; jukebox
   const [saved, setSaved] = useState<DirHandle>(); // remembered folder we can't read until the user clicks
   const [error, setError] = useState<string>();
   const [blocked, setBlocked] = useState(false);
+  const loadId = useRef(0);
 
   const current = jukebox?.state?.current;
   const wantPlaying = jukebox?.state?.playing === true;
@@ -33,6 +34,10 @@ export function Jukebox({ code, jukebox, duck, showUi }: { code: string; jukebox
       setSaved(undefined);
       void rememberFolder(dir);
       void publishTracks(code, tracks.map((t) => t.title));
+      // Song lengths are read in the background and published once ready; ignore them if a newer folder was loaded meanwhile.
+      const id = ++loadId.current;
+      void publishDurations(code, null);
+      void readDurations(tracks).then((seconds) => { if (id === loadId.current) void publishDurations(code, seconds); });
       if (tracks.length === 0) setError("No audio files found in that folder.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't read that folder.");

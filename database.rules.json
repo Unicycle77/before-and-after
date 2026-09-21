@@ -30,6 +30,9 @@
           "tracks": {
             ".write": "auth != null && root.child('sessions').child($code).child('hostUid').val() === auth.uid"
           },
+          "durations": {
+            ".write": "auth != null && root.child('sessions').child($code).child('hostUid').val() === auth.uid"
+          },
           "state": {
             ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
           }
