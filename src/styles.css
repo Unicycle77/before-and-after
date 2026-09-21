@@ -276,14 +276,23 @@ body.idle-cursor .stage { cursor: none; }
 
 /* review: everyone's before & after on one screen (--s = layout unit, set from JS) */
 .review { align-content: center; }
-.review-grid { display: grid; justify-content: center; align-content: center; padding: 16px; }
-.review-cell { display: flex; flex-direction: column; align-items: center; animation: hang 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards; }
+.review-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; box-sizing: content-box; }
+.review-cell { width: calc(var(--s) * 9.6); flex: none; display: flex; flex-direction: column; align-items: center; animation: hang 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards; }
+.review-slot {
+  width: calc(var(--s) * 4.6);
+  height: calc(var(--s) * 3.6);
+  display: grid;
+  place-items: center;
+}
+.review .pic.ready { opacity: 1; }
 .review-pair { display: flex; gap: calc(var(--s) * 0.4); }
 .review .pic {
   --bw: calc(var(--s) * 0.3);
   box-sizing: content-box;
-  width: calc(var(--s) * 3 * var(--r, 1.3333)); /* set per photo, so the frame hugs it */
-  height: calc(var(--s) * 3);
+  width: calc(var(--s) * var(--pw, 4)); /* set per photo, so the frame hugs it */
+  height: calc(var(--s) * var(--ph, 3));
+  opacity: 0;
+  transition: opacity 0.25s;
   border: var(--bw) solid transparent;
   border-image: url("./assets/frame.png") 100 / var(--bw) round;
   background: #1a0f08;
@@ -319,3 +328,4 @@ body.idle-cursor .stage { cursor: none; }
   box-shadow: 0 3px 8px #000a;
 }
 @media (prefers-reduced-motion: reduce) { .review-cell { animation: none; } }
+.img-failed { display: grid; place-items: center; width: 100%; height: 100%; min-width: 12rem; min-height: 8rem; color: var(--muted); font-family: var(--typewriter); }

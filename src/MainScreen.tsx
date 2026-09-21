@@ -4,6 +4,7 @@ import { DownloadZip } from "./DownloadZip";
 import { Jukebox } from "./Jukebox";
 import { Review } from "./Review";
 import { StageControls } from "./StageControls";
+import { SafeImg } from "./SafeImg";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -14,6 +15,15 @@ export function MainScreen() {
   const [code, setCode] = useState(() => store.get(KEY));
   const [error, setError] = useState<string>();
   const session = useSession(code || undefined);
+
+  // Warm the browser cache with every submitted photo so reveals appear instantly.
+  const photoUrls = Object.values(session?.media ?? {})
+    .flatMap((m) => [m.before, m.after])
+    .filter((u): u is string => !!u)
+    .join("\n");
+  useEffect(() => {
+    for (const url of photoUrls.split("\n")) if (url) new Image().src = url;
+  }, [photoUrls]);
 
   // Resume a stored session on refresh; drop it if it's gone or isn't ours.
   useEffect(() => {
@@ -139,16 +149,18 @@ function Stage({ code, name, step, media, display }: { code: string; name: strin
       {both ? (["before", "after"] as const).map((kind) => (
         <Framed key={kind}>
           {(setRatio) => (
-            <img src={media[kind]} alt={`${name} ${kind}`}
-              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} />
+            <SafeImg src={media[kind] ?? ""} alt={`${name} ${kind}`}
+              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)}
+              onFail={() => setRatio(4 / 3)} />
           )}
         </Framed>
       )) : step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
           onEnded={() => void patchDisplay(code, { playing: false })} /> : (
         <Framed key={step}>
           {(setRatio) => (
-            <img src={media[step]} alt={`${name} ${step}`}
-              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} />
+            <SafeImg src={media[step] ?? ""} alt={`${name} ${step}`}
+              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)}
+              onFail={() => setRatio(4 / 3)} />
           )}
         </Framed>
       )}
