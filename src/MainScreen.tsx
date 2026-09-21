@@ -5,6 +5,7 @@ import { Jukebox } from "./Jukebox";
 import { Review } from "./Review";
 import { StageControls } from "./StageControls";
 import { SafeImg } from "./SafeImg";
+import { preloadImages } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
@@ -22,7 +23,7 @@ export function MainScreen() {
     .filter((u): u is string => !!u)
     .join("\n");
   useEffect(() => {
-    for (const url of photoUrls.split("\n")) if (url) new Image().src = url;
+    preloadImages(photoUrls.split("\n"));
   }, [photoUrls]);
 
   // Resume a stored session on refresh; drop it if it's gone or isn't ours.

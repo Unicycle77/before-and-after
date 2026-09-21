@@ -28,7 +28,11 @@ export async function submitMedia(
 ): Promise<void> {
   const body = kind === "video" ? file : await shrinkImage(file);
   const contentType = kind === "video" ? file.type || "video/mp4" : body.type || "image/jpeg";
-  const task = uploadBytesResumable(ref(storage(), `sessions/${code}/${uid}/${kind}-${Date.now()}`), body, { contentType });
+  const task = uploadBytesResumable(ref(storage(), `sessions/${code}/${uid}/${kind}-${Date.now()}`), body, {
+    contentType,
+    // File names are unique per upload, so a cached copy is never stale.
+    cacheControl: "public, max-age=31536000, immutable",
+  });
   await new Promise<void>((resolve, reject) => {
     task.on("state_changed", (s) => onProgress(s.bytesTransferred / s.totalBytes), reject, resolve);
   });

@@ -52,34 +52,51 @@ export function Review({ code, players, media, display }: {
     .sort(([, a], [, b]) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0));
   const { cols, s } = bestLayout(entries.length, w, h);
 
+  // Hold everything back until every photo has loaded (or failed), then show it all at once.
+  // After 10s we show what we have rather than wait forever; once shown, it stays shown.
+  const urls = entries.flatMap(([uid]) => [media[uid]?.before, media[uid]?.after].filter((u): u is string => !!u));
+  const [settled, setSettled] = useState<Set<string>>(new Set());
+  const [timedOut, setTimedOut] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setTimedOut(true), 10_000);
+    return () => window.clearTimeout(t);
+  }, []);
+  const settledCount = urls.filter((u) => settled.has(u)).length;
+  useEffect(() => {
+    if (!revealed && entries.length > 0 && (settledCount >= urls.length || timedOut)) setRevealed(true);
+  }, [revealed, entries.length, settledCount, urls.length, timedOut]);
+  const onSettled = (url: string) => setSettled((prev) => (prev.has(url) ? prev : new Set(prev).add(url)));
+
   return (
     <main className="stage review">
       {entries.length === 0 ? (
         <p className="muted">No photos to review yet.</p>
       ) : (
         <div
-          className="review-grid"
+          className={revealed ? "review-grid revealed" : "review-grid"}
           // Exactly `cols` cells wide (+1px slack for rounding), so rows wrap at the right place and each row is centered.
           style={{ "--s": `${s}px`, width: Math.ceil(cols * PAIR_W * s + (cols - 1) * GAP) + 1, gap: GAP } as React.CSSProperties}
         >
-          {entries.map(([uid, p], i) => (
-            <div key={uid} className="review-cell" style={{ animationDelay: `${i * 0.08}s` }}>
+          {entries.map(([uid, p]) => (
+            <div key={uid} className="review-cell">
               <div className="review-pair">
-                <Pic src={media[uid]?.before} alt={`${p.name} before`} />
-                <Pic src={media[uid]?.after} alt={`${p.name} after`} />
+                <Pic src={media[uid]?.before} alt={`${p.name} before`} onSettled={onSettled} />
+                <Pic src={media[uid]?.after} alt={`${p.name} after`} onSettled={onSettled} />
               </div>
               <div className="review-name">{p.name}</div>
             </div>
           ))}
         </div>
       )}
+      {!revealed && entries.length > 0 && <div className="review-loading">Loading photos… {settledCount} / {urls.length}</div>}
       <StageControls code={code} display={display} hasVideo={false} />
     </main>
   );
 }
 
 /** A fixed slot; the frame inside it hugs the photo, shrunk to fit and centered. */
-function Pic({ src, alt }: { src?: string; alt: string }) {
+function Pic({ src, alt, onSettled }: { src?: string; alt: string; onSettled: (url: string) => void }) {
   const [ratio, setRatio] = useState<number | undefined>(src ? undefined : DEFAULT_RATIO);
   useEffect(() => { setRatio(src ? undefined : DEFAULT_RATIO); }, [src]);
 
@@ -93,8 +110,8 @@ function Pic({ src, alt }: { src?: string; alt: string }) {
           <SafeImg
             src={src}
             alt={alt}
-            onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || DEFAULT_RATIO)}
-            onFail={() => setRatio(DEFAULT_RATIO)}
+            onLoad={(e) => { setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || DEFAULT_RATIO); onSettled(src); }}
+            onFail={() => { setRatio(DEFAULT_RATIO); onSettled(src); }}
           />
         ) : (
           <span>no photo</span>
