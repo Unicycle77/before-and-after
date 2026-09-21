@@ -2,6 +2,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { DownloadZip } from "./DownloadZip";
 import { Jukebox } from "./Jukebox";
+import { Review } from "./Review";
 import { StageControls } from "./StageControls";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
@@ -48,6 +49,15 @@ export function MainScreen() {
   const shown = display.uid ? session.players?.[display.uid] : undefined;
   const shownMedia = display.uid ? media[display.uid] : undefined;
   const videoPlaying = display.step === "video" && display.playing !== false;
+
+  if (display.step === "review") {
+    return (
+      <>
+        <Review code={code} players={session.players ?? {}} media={media} display={display} />
+        <Jukebox code={code} jukebox={session.jukebox} duck={false} showUi={false} />
+      </>
+    );
+  }
 
   if (display.step !== "list" && shown && shownMedia) {
     return (
@@ -122,7 +132,7 @@ const Chip = ({ on, children }: { on: boolean; children: string }) => (
 );
 
 /** Full-screen presentation of one player's before / after / video, in a gold frame. */
-function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list">; media: Media; display: Display }) {
+function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list" | "review">; media: Media; display: Display }) {
   const both = step === "both";
   return (
     <main className={both ? "stage both" : "stage"}>

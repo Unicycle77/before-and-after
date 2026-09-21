@@ -34,6 +34,7 @@ export function StageControls({ code, display, hasVideo }: { code: string; displ
     };
   }, []);
 
+  const review = display.step === "review";
   const available = ORDER.filter((s) => s !== "video" || hasVideo);
   const go = (next: StageStep) => { if (uid) void setDisplay(code, { uid, step: next, ...(next === "video" ? { playing: true } : {}) }); };
   const back = () => void setDisplay(code, { step: "list" });
@@ -41,6 +42,7 @@ export function StageControls({ code, display, hasVideo }: { code: string; displ
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (review && e.key !== "Escape" && e.key !== "Backspace") return;
       const idx = available.indexOf(step);
       switch (e.key) {
         case "1": go("before"); break;
@@ -67,10 +69,10 @@ export function StageControls({ code, display, hasVideo }: { code: string; displ
 
   return (
     <div className={visible ? "stage-controls show" : "stage-controls"} aria-hidden={!visible}>
-      {available.map((s) => (
+      {!review && available.map((s) => (
         <button key={s} className={s === step ? "active" : ""} onClick={() => go(s)} tabIndex={visible ? 0 : -1}>{LABEL[s]}</button>
       ))}
-      {step === "video" && (
+      {!review && step === "video" && (
         <>
           <button onClick={() => void patchDisplay(code, { playing: display.playing === false })} tabIndex={visible ? 0 : -1}>
             {display.playing === false ? "▶ Play" : "⏸ Pause"}

@@ -43,6 +43,15 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   return (
     <section className="remote">
       <h2>Pick a player</h2>
+      <div className="steps">
+        <button
+          className={display.step === "review" ? "step active" : "step"}
+          disabled={!players.some(([uid]) => session.media?.[uid]?.before || session.media?.[uid]?.after)}
+          onClick={() => void setDisplay(code, display.step === "review" ? { step: "list" } : { step: "review" })}
+        >
+          {display.step === "review" ? "✕ Close review" : "◫ Review everyone"}
+        </button>
+      </div>
       {players.length === 0 && <p className="muted">No players yet.</p>}
       <ul className="picker">
         {players.map(([uid, p]) => {

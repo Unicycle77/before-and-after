@@ -273,3 +273,49 @@ body.idle-cursor .stage { cursor: none; }
 .tracklist button { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
 .tracklist .title { min-width: 0; overflow-wrap: anywhere; }
 .tracklist .dur { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.75; }
+
+/* review: everyone's before & after on one screen (--s = layout unit, set from JS) */
+.review { align-content: center; }
+.review-grid { display: grid; justify-content: center; align-content: center; padding: 16px; }
+.review-cell { display: flex; flex-direction: column; align-items: center; animation: hang 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards; }
+.review-pair { display: flex; gap: calc(var(--s) * 0.4); }
+.review .pic {
+  --bw: calc(var(--s) * 0.3);
+  box-sizing: content-box;
+  width: calc(var(--s) * 4);
+  height: calc(var(--s) * 3);
+  border: var(--bw) solid transparent;
+  border-image: url("./assets/frame.png") 100 / var(--bw) round;
+  background: #1a0f08;
+  background-clip: padding-box;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-family: var(--typewriter);
+  font-size: calc(var(--s) * 0.4);
+}
+/* absolutely positioned so a portrait/huge photo can never stretch the frame */
+.review .pic img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.review-name {
+  margin-top: calc(var(--s) * 0.1);
+  height: calc(var(--s) * 0.8);
+  max-width: 100%;
+  padding: 0 calc(var(--s) * 0.6);
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--gold-dark);
+  font-family: var(--typewriter);
+  font-size: calc(var(--s) * 0.5);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 3px 8px #000a;
+}
+@media (prefers-reduced-motion: reduce) { .review-cell { animation: none; } }
