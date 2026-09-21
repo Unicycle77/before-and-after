@@ -231,3 +231,13 @@ progress { width: 100%; accent-color: var(--burgundy); }
 .qr-overlay { position: fixed; inset: 0; background: #000e; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; z-index: 10; }
 .qr-overlay video { width: min(90vw, 420px); }
 button .muted { color: #7a6a55; }
+
+/* host remote: what the main screen is showing */
+.steps { display: grid; gap: 0.6rem; }
+.steps.two { grid-template-columns: 1fr 1fr; }
+.steps button { padding: 1.1rem 0.5rem; font-size: 1.2rem; }
+.steps button.active {
+  background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f);
+  border-color: #7a5a14;
+  font-weight: bold;
+}

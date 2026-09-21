@@ -1,7 +1,7 @@
 import { patchDisplay, removePlayer, setDisplay } from "./session";
 import type { Session } from "./types";
 
-/** The host's phone: pick a player, then advance before → after → video on the main screen. */
+/** The host's phone: pick a player, then choose what the main screen shows (before / after / side by side / video). */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const players = Object.entries(session.players ?? {});
   const display = session.display ?? { step: "list" as const };
@@ -10,39 +10,32 @@ export function HostRemote({ code, session }: { code: string; session: Session }
 
   if (display.step !== "list" && display.uid && current) {
     const uid = display.uid;
+    const show = (step: "before" | "after" | "both") => void setDisplay(code, { uid, step });
+    const cls = (step: string) => (display.step === step ? "step active" : "step");
+    const hasVideo = !!currentMedia?.video;
     return (
       <section className="remote">
         <h2>{current.name}</h2>
-        <p className="muted">Main screen is showing: <strong>{display.step === "both" ? "BEFORE & AFTER" : display.step.toUpperCase()}</strong></p>
-        {display.step === "before" && <button className="big" onClick={() => void setDisplay(code, { uid, step: "after" })}>Reveal AFTER ▶</button>}
-        {display.step === "after" && (
-          <>
-            <p className="muted">Talk it over, then when everyone's ready:</p>
-            <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
-              {currentMedia?.video ? "▶ Watch the video" : "No video submitted"}
-            </button>
-            <button onClick={() => void setDisplay(code, { uid, step: "both" })}>◫ Show before &amp; after side by side</button>
-          </>
-        )}
-        {display.step === "both" && (
-          <>
-            <button className="big" disabled={!currentMedia?.video} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
-              {currentMedia?.video ? "▶ Watch the video" : "No video submitted"}
-            </button>
-            <button onClick={() => void setDisplay(code, { uid, step: "after" })}>← Back to After</button>
-          </>
-        )}
-        {display.step === "video" && (
-          <>
-            <button className="big" onClick={() => void patchDisplay(code, { playing: display.playing === false })}>
-              {display.playing === false ? "▶ Play" : "⏸ Pause"}
-            </button>
-            <button onClick={() => void patchDisplay(code, { playing: true, restartAt: Date.now() })}>↺ Restart video</button>
-            <button onClick={() => void setDisplay(code, { uid, step: "after" })}>← Back to After</button>
-          </>
-        )}
-        <button onClick={() => void setDisplay(code, { uid, step: "before" })}>Show Before again</button>
-        <button onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
+        <div className="steps two">
+          <button className={cls("before")} onClick={() => show("before")}>Before</button>
+          <button className={cls("after")} onClick={() => show("after")}>After</button>
+        </div>
+        <div className="steps">
+          <button className={cls("both")} onClick={() => show("both")}>◫ Side by side</button>
+        </div>
+        <div className="steps">
+          <button className={cls("video")} disabled={!hasVideo} onClick={() => void setDisplay(code, { uid, step: "video", playing: true })}>
+            {hasVideo ? "▶ Video" : "No video submitted"}
+          </button>
+        </div>
+        {/* Always rendered, so every control keeps its position on every view. */}
+        <div className="steps two">
+          <button disabled={display.step !== "video"} onClick={() => void patchDisplay(code, { playing: display.playing === false })}>
+            {display.step === "video" && display.playing === false ? "▶ Play" : "⏸ Pause"}
+          </button>
+          <button disabled={display.step !== "video"} onClick={() => void patchDisplay(code, { playing: true, restartAt: Date.now() })}>↺ Restart</button>
+        </div>
+        <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
       </section>
     );
   }
