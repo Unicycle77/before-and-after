@@ -333,3 +333,9 @@ body.idle-cursor .stage { cursor: none; }
 }
 @media (prefers-reduced-motion: reduce) { .review-cell { animation: none; } }
 .img-failed { display: grid; place-items: center; width: 100%; height: 100%; min-width: 12rem; min-height: 8rem; color: var(--muted); font-family: var(--typewriter); }
+.slot .slot-hint { color: #6b5a44; margin: 0; }
+.pair-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.pair-preview figure { margin: 0; display: grid; gap: 0.3rem; text-align: center; }
+.pair-preview img, .pair-preview .ph { width: 100%; height: 30vh; object-fit: contain; background: #000; border: 3px solid var(--gold); border-radius: 2px; }
+.pair-preview .ph { display: grid; place-items: center; color: var(--muted); font-family: var(--typewriter); border-style: dashed; }
+.pair-preview figcaption { font-family: var(--typewriter); color: var(--burgundy); }

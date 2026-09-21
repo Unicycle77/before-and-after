@@ -27,10 +27,11 @@ export async function submitMedia(
   code: string,
   uid: string,
   kind: MediaKind,
-  file: File,
+  file: Blob,
   onProgress: (fraction: number) => void,
+  opts: { alreadySized?: boolean } = {}, // true for frames we already resized/encoded ourselves
 ): Promise<void> {
-  const body = kind === "video" ? file : await shrinkImage(file);
+  const body = kind === "video" || opts.alreadySized ? file : await shrinkImage(file as File);
   const contentType = kind === "video" ? file.type || "video/mp4" : body.type || "image/jpeg";
   const task = uploadBytesResumable(ref(storage(), `sessions/${code}/${uid}/${kind}-${Date.now()}`), body, {
     contentType,
