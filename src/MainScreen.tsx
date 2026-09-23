@@ -8,7 +8,7 @@ import { submissionStatus } from "./submission";
 import { SafeImg } from "./SafeImg";
 import { playableVideoUrl, preloadImages, preloadVideo } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
-import { createSession, ensureSignedIn, patchDisplay, resetController, setDisplay, store, useSession } from "./session";
+import { JoinError, createSession, ensureSignedIn, patchDisplay, resetController, resumeSession, setDisplay, store, useSession } from "./session";
 import type { Display, Media, Player, Step } from "./types";
 
 const KEY = "ba.hostCode";
@@ -16,6 +16,8 @@ const KEY = "ba.hostCode";
 export function MainScreen() {
   const [code, setCode] = useState(() => store.get(KEY));
   const [error, setError] = useState<string>();
+  const [resumeCode, setResumeCode] = useState("");
+  const [busy, setBusy] = useState(false);
   const session = useSession(code || undefined);
 
   // Warm the browser cache with every submitted photo so reveals appear instantly.
@@ -33,28 +35,43 @@ export function MainScreen() {
   const pickedVideo = pickedUid ? session?.media?.[pickedUid]?.video : undefined;
   useEffect(() => { preloadVideo(pickedVideo); }, [pickedVideo]);
 
-  // Resume a stored session on refresh; drop it if it's gone or isn't ours.
+  // Resume a stored session on refresh; drop it if it's gone or another screen has taken it over.
   useEffect(() => {
     if (!code || session === undefined) return;
     void ensureSignedIn().then((u) => {
-      if (session === null || session.hostUid !== u.uid) { store.set(KEY, ""); setCode(""); }
+      if (session === null || session.hostUid !== u.uid) {
+        if (session) setError(`Session ${code} was resumed on another screen.`);
+        store.set(KEY, "");
+        setCode("");
+      }
     });
   }, [code, session]);
 
-  async function start() {
+  async function open(get: () => Promise<string>) {
     setError(undefined);
+    setBusy(true);
     try {
-      const c = await createSession();
+      const c = await get();
       store.set(KEY, c);
       setCode(c);
-    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+      setResumeCode("");
+    } catch (e) {
+      setError(e instanceof JoinError ? e.message : e instanceof Error ? e.message : String(e));
+    } finally { setBusy(false); }
   }
 
   if (!code) {
     return (
       <main className="center">
         <h1>Before &amp; After</h1>
-        <button className="big" onClick={() => void start()}>Start a session</button>
+        <button className="big" disabled={busy} onClick={() => void open(createSession)}>Start a session</button>
+        <form className="resume" onSubmit={(e) => { e.preventDefault(); void open(() => resumeSession(resumeCode)); }}>
+          <label>Or resume a session
+            <input value={resumeCode} onChange={(e) => setResumeCode(e.target.value.toUpperCase().slice(0, 4))}
+              maxLength={4} autoComplete="off" placeholder="ABCD" />
+          </label>
+          <button type="submit" disabled={busy || resumeCode.length !== 4}>Resume</button>
+        </form>
         {error && <p className="error">{error}</p>}
       </main>
     );

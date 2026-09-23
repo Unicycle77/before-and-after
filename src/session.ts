@@ -60,6 +60,19 @@ export async function createSession(): Promise<string> {
 
 export class JoinError extends Error {}
 
+/**
+ * Main screen: picks up an existing session by its code, e.g. after "End session" or on another computer.
+ * Taking it over moves `hostUid` to this browser, which sends the previous screen back to its start page.
+ */
+export async function resumeSession(rawCode: string): Promise<string> {
+  const code = rawCode.trim().toUpperCase();
+  const user = await ensureSignedIn();
+  const hostUid = await get(ref(db(), `sessions/${code}/hostUid`));
+  if (!hostUid.exists()) throw new JoinError(`No session found for code ${code}.`);
+  if (hostUid.val() !== user.uid) await set(ref(db(), `sessions/${code}/hostUid`), user.uid);
+  return code;
+}
+
 export async function joinSession(rawCode: string, rawName: string): Promise<string> {
   const code = rawCode.trim().toUpperCase();
   const name = rawName.trim();
@@ -71,7 +84,10 @@ export async function joinSession(rawCode: string, rawName: string): Promise<str
   // A brand-new player starts clean: clear anything left behind by an earlier stint or a partial removal.
   // (Someone reconnecting with their player record still in place keeps their submission.)
   if (!(await get(ref(db(), `sessions/${code}/players/${user.uid}`))).exists()) {
-    await remove(ref(db(), `sessions/${code}/media/${user.uid}`));
+    await Promise.all([
+      remove(ref(db(), `sessions/${code}/media/${user.uid}`)),
+      remove(ref(db(), `sessions/${code}/unlocked/${user.uid}`)),
+    ]);
   }
   await set(ref(db(), `sessions/${code}/players/${user.uid}`), {
     name,
@@ -90,6 +106,7 @@ export async function claimController(rawCode: string): Promise<string> {
   if (current && current !== user.uid) {
     throw new JoinError("This session already has a host remote. Ask for it to be reset on the main screen.");
   }
+  if (current === user.uid) return code; // this phone already holds the slot
   try {
     await set(ref(db(), `sessions/${code}/controllerUid`), user.uid);
   } catch {
@@ -100,6 +117,9 @@ export async function claimController(rawCode: string): Promise<string> {
 
 /** Main screen: disconnects the current host remote so another phone can claim it. */
 export const resetController = (code: string) => remove(ref(db(), `sessions/${code}/controllerUid`));
+
+/** Host phone: gives up the remote slot, so the main screen shows the host QR again. */
+export const releaseController = resetController;
 
 /** Pulls a 4-char code from a scanned join URL (?code=ABCD) or a bare code. */
 export function extractCode(text: string): string | null {
@@ -116,8 +136,16 @@ export const removePlayer = async (code: string, uid: string) => {
   await Promise.all([
     remove(ref(db(), `sessions/${code}/players/${uid}`)),
     remove(ref(db(), `sessions/${code}/media/${uid}`)),
+    remove(ref(db(), `sessions/${code}/unlocked/${uid}`)),
   ]);
 };
+
+/**
+ * Host: lets a player who has already submitted send a new video (or locks them again).
+ * The player's phone clears the unlock itself once the new submission lands.
+ */
+export const setUnlocked = (code: string, uid: string, unlocked: boolean) =>
+  unlocked ? set(ref(db(), `sessions/${code}/unlocked/${uid}`), true) : remove(ref(db(), `sessions/${code}/unlocked/${uid}`));
 
 /** A player leaving on their own: same as being removed. */
 export const leaveSession = removePlayer;

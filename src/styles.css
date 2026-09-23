@@ -82,6 +82,8 @@ input::placeholder { color: #8b7a63; }
 .error { color: #ff9c8a; }
 .center { min-height: 100vh; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; }
 .center h1 { font-size: 3rem; }
+.resume { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 0.5rem; margin-top: 1.5rem; text-align: left; }
+.resume input { font-family: var(--typewriter); letter-spacing: 0.3em; text-transform: uppercase; }
 .row { display: flex; gap: 0.5rem; }
 .row > * { flex: 1; }
 .row input { flex: 3; }
@@ -240,7 +242,7 @@ progress { width: 100%; accent-color: var(--burgundy); }
 .remote { display: grid; gap: 0.75rem; }
 .picker li { display: flex; gap: 0.5rem; }
 .picker li > button:first-child { flex: 1; display: flex; flex-direction: column; text-align: left; }
-.picker .x { padding: 0.7rem 1rem; }
+.picker .x, .picker .lock { padding: 0.7rem 1rem; }
 .qr-overlay { position: fixed; inset: 0; background: #000e; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; z-index: 10; }
 .qr-overlay video { width: min(90vw, 420px); }
 button .muted { color: #7a6a55; }

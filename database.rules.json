@@ -5,11 +5,14 @@
         ".read": true,
         ".write": "auth != null && (!data.exists() || data.child('hostUid').val() === auth.uid)",
 
-        "hostUid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "hostUid": {
+          ".write": "auth != null && data.exists() && newData.val() === auth.uid",
+          ".validate": "newData.isString() && newData.val() === auth.uid"
+        },
         "createdAt": { ".validate": "newData.val() === now" },
 
         "controllerUid": {
-          ".write": "auth != null && !data.exists() && newData.val() === auth.uid",
+          ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))",
           ".validate": "newData.isString()"
         },
 
@@ -22,7 +25,14 @@
 
         "media": {
           "$uid": {
-            ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
+            ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || !(data.child('before').exists() && data.child('after').exists()) || root.child('sessions').child($code).child('unlocked').child($uid).val() === true)) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
+          }
+        },
+
+        "unlocked": {
+          "$uid": {
+            ".write": "auth != null && ((auth.uid === $uid && !newData.exists()) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+            ".validate": "newData.val() === true"
           }
         },
 

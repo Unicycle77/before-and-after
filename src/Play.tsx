@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { QrScannerModal } from "./QrScannerModal";
 import { FrameError, extractFrames } from "./frames";
 import { submitMedia } from "./media";
-import { JoinError, extractCode, joinSession, leaveSession, store, useSession, useUid } from "./session";
+import { JoinError, extractCode, joinSession, leaveSession, setUnlocked, store, useSession, useUid } from "./session";
+import { isLocked } from "./submission";
 
 const CODE_KEY = "ba.playCode";
 const NAME_KEY = "ba.playName";
@@ -78,6 +79,8 @@ function Join({ onJoined }: { onJoined: (code: string) => void }) {
 }
 
 /**
+ * Once submitted, the player is locked until the host unlocks them; a new submission locks them again.
+ *
  * The player's whole submission is one video. Its first and last frames become the Before and After
  * (grabbed on the phone the moment a video is chosen), shown above the video so the player can check
  * them. Nothing is uploaded until they tap Submit; there are no standalone photos.
@@ -86,6 +89,7 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
   code: string; uid: string; name: string; session: NonNullable<ReturnType<typeof useSession>>; onLeave: () => void;
 }) {
   const mine = session.media?.[uid] ?? {};
+  const locked = isLocked(mine, session.unlocked?.[uid]);
   const [picked, setPicked] = useState<Picked>();
   const [checking, setChecking] = useState(false);
   const [progress, setProgress] = useState<number>();
@@ -98,6 +102,9 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
   const uploading = progress !== undefined;
 
   useEffect(() => () => { if (pickedRef.current) revokePicked(pickedRef.current); }, []);
+
+  // The host re-locked us before we submitted: drop the unsent video.
+  useEffect(() => { if (locked && !uploading) discard(); }, [locked]);
 
   function discard() {
     if (picked) revokePicked(picked);
@@ -135,6 +142,7 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
         submitMedia(code, uid, "after", picked.last, () => {}, { alreadySized: true }),
       ]);
       discard();
+      if (session.unlocked?.[uid]) await setUnlocked(code, uid, false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed. Try again.");
     } finally {
@@ -168,14 +176,20 @@ export function PlayerHome({ code, uid, name, session, onLeave }: {
         {!videoUrl && <p className="muted small slot-hint">Start on your Before, finish on your After.</p>}
         {videoUrl && <video src={videoUrl} controls playsInline preload="metadata" />}
         {checking && <p className="muted small slot-hint">Checking your video…</p>}
-        {picked && !uploading && <p className="slot-hint"><strong>Not submitted yet</strong> — tap Submit when you're happy.</p>}
+        {picked && !uploading && !locked && <p className="slot-hint"><strong>Not submitted yet</strong> — tap Submit when you're happy.</p>}
         {uploading && <progress value={progress} max={1} />}
 
-        {picked && <button className="big" disabled={uploading} onClick={() => void submit()}>{uploading ? "Submitting…" : "Submit"}</button>}
-        <div className="row">
-          <button disabled={uploading || checking} onClick={() => camera.current?.click()}>{videoUrl ? "Record again" : "Record"}</button>
-          <button disabled={uploading || checking} onClick={() => library.current?.click()}>Choose file</button>
-        </div>
+        {locked && !uploading ? (
+          <p className="slot-hint">🔒 <strong>Submitted and locked.</strong> Ask the host if you need to change it.</p>
+        ) : (
+          <>
+            {picked && <button className="big" disabled={uploading} onClick={() => void submit()}>{uploading ? "Submitting…" : "Submit"}</button>}
+            <div className="row">
+              <button disabled={uploading || checking} onClick={() => camera.current?.click()}>{videoUrl ? "Record again" : "Record"}</button>
+              <button disabled={uploading || checking} onClick={() => library.current?.click()}>Choose file</button>
+            </div>
+          </>
+        )}
         <input ref={camera} type="file" accept="video/*" capture="environment" hidden onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
         <input ref={library} type="file" accept="video/*" hidden onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
         {error && <p className="error">{error}</p>}

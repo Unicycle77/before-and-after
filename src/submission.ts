@@ -12,3 +12,7 @@ export function submissionStatus(media: Media | undefined): SubmissionStatus {
   if (media?.video || media?.before || media?.after) return "sending";
   return "waiting";
 }
+
+/** A player can't replace a finished submission until the host unlocks them. */
+export const isLocked = (media: Media | undefined, unlocked: boolean | undefined) =>
+  submissionStatus(media) === "submitted" && !unlocked;

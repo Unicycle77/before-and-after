@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HostRemote } from "./HostRemote";
 import { JukeboxRemote } from "./JukeboxRemote";
 import { QrScannerModal } from "./QrScannerModal";
-import { JoinError, claimController, extractCode, store, useSession, useUid } from "./session";
+import { JoinError, claimController, extractCode, releaseController, store, useSession, useUid } from "./session";
 
 const KEY = "ba.remoteCode";
 
@@ -32,7 +32,7 @@ export function HostPage() {
         <button className={tab === "music" ? "active" : ""} onClick={() => setTab("music")}>🎵 Jukebox</button>
       </nav>
       {tab === "screen" ? <HostRemote code={code} session={session} /> : <JukeboxRemote code={code} session={session} />}
-      <button className="link" onClick={disconnect}>Disconnect</button>
+      <button className="link" onClick={() => { void releaseController(code); disconnect(); }}>Disconnect</button>
     </main>
   );
 }
@@ -42,20 +42,34 @@ function Connect({ onConnected }: { onConnected: (code: string) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [scanning, setScanning] = useState(false);
+  const autoTried = useRef(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function connect(c: string) {
     setBusy(true);
     setError(undefined);
-    try { onConnected(await claimController(code)); }
+    try { onConnected(await claimController(c)); }
     catch (err) { setError(err instanceof JoinError ? err.message : "Something went wrong. Try again."); }
     finally { setBusy(false); }
+  }
+
+  // Opened from the host QR on the main screen: connect straight away, so the QR disappears there.
+  // The code is then dropped from the URL, so a later Disconnect doesn't reconnect on refresh.
+  useEffect(() => {
+    if (code.length !== 4 || autoTried.current) return;
+    autoTried.current = true;
+    history.replaceState(null, "", location.pathname);
+    void connect(code);
+  }, []);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    void connect(code);
   }
 
   return (
     <main className="join">
       <h1>Host remote</h1>
-      <form onSubmit={(e) => void submit(e)}>
+      <form onSubmit={submit}>
         <label>Game code (from the main screen)
           <div className="row">
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 4))}

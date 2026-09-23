@@ -39,5 +39,7 @@ export interface Session {
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;
+  /** Players the host has let resubmit. Everyone else is locked once their submission is in. */
+  unlocked?: Record<string, boolean>;
   jukebox?: Jukebox;
 }

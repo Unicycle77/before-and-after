@@ -1,5 +1,5 @@
 import { submissionStatus } from "./submission";
-import { patchDisplay, removePlayer, setDisplay, setShowDownload } from "./session";
+import { patchDisplay, removePlayer, setDisplay, setShowDownload, setUnlocked } from "./session";
 import type { Session } from "./types";
 
 /** The host's phone: pick a player, then choose what the main screen shows (before / after / side by side / video). */
@@ -58,12 +58,20 @@ export function HostRemote({ code, session }: { code: string; session: Session }
         {players.map(([uid, p]) => {
           const m = session.media?.[uid] ?? {};
           const status = submissionStatus(m);
+          const unlocked = !!session.unlocked?.[uid];
           return (
             <li key={uid}>
               <button disabled={status !== "submitted"} onClick={() => void setDisplay(code, { uid, step: "before" })}>
                 <span>{p.name}</span>
-                <span className="muted small">{status === "submitted" ? "✓ submitted" : status === "sending" ? "sending…" : "waiting"}</span>
+                <span className="muted small">
+                  {status === "submitted" ? "✓ submitted" : status === "sending" ? "sending…" : "waiting"}
+                  {unlocked && " · 🔓 may resubmit"}
+                </span>
               </button>
+              {status === "submitted" && (
+                <button className="lock" aria-label={unlocked ? `Lock ${p.name}'s submission` : `Let ${p.name} resubmit`}
+                  onClick={() => void setUnlocked(code, uid, !unlocked)}>{unlocked ? "🔓" : "🔒"}</button>
+              )}
               <button className="x" aria-label={`Remove ${p.name}`} onClick={() => { if (confirm(`Remove ${p.name} and their video and photos? They can then rejoin fresh.`)) void removePlayer(code, uid); }}>×</button>
             </li>
           );
