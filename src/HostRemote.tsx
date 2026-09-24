@@ -4,6 +4,21 @@ import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setU
 import type { Session } from "./types";
 
 const GAMES_OPEN_KEY = "ba.hostGamesOpen";
+const SETTINGS_OPEN_KEY = "ba.hostSettingsOpen";
+
+/** A section the host can fold away; this phone remembers whether it's open. */
+function useFold(key: string, openByDefault: boolean) {
+  const [open, setOpen] = useState(() => {
+    const saved = store.get(key);
+    return saved ? saved === "yes" : openByDefault;
+  });
+  const onToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+    const now = e.currentTarget.open;
+    setOpen(now);
+    store.set(key, now ? "yes" : "no");
+  };
+  return { open, onToggle };
+}
 
 /**
  * The host's phone: pick a game, then a player, then the game's controls choose what the main screen shows.
@@ -11,8 +26,9 @@ const GAMES_OPEN_KEY = "ba.hostGamesOpen";
  */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const game = activeGame(session);
-  // The game list can be folded away to leave room for the players; this phone remembers which.
-  const [gamesOpen, setGamesOpen] = useState(() => store.get(GAMES_OPEN_KEY) !== "no");
+  // Both can be folded away to leave room for the players.
+  const gamesFold = useFold(GAMES_OPEN_KEY, true);
+  const settingsFold = useFold(SETTINGS_OPEN_KEY, false);
   const players = Object.entries(session.players ?? {});
   const display = session.display ?? { step: "list" as const };
   const current = display.uid ? session.players?.[display.uid] : undefined;
@@ -22,8 +38,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   };
   // Always first, so it keeps its place on every view. Inside a game its heading names the game.
   const gamePicker = (
-    <details className="fold" open={gamesOpen}
-      onToggle={(e) => { const open = e.currentTarget.open; setGamesOpen(open); store.set(GAMES_OPEN_KEY, open ? "" : "no"); }}>
+    <details className="fold" {...gamesFold}>
       <summary><h2>{game ? `Game: ${game.name}` : "Pick a game"}</h2></summary>
       <div className="steps">
         {Object.values(GAMES).map((g) => (
@@ -33,26 +48,33 @@ export function HostRemote({ code, session }: { code: string; session: Session }
       </div>
     </details>
   );
-  const downloadToggle = (
-    <button onClick={() => void setShowDownload(code, !session.showDownload)}>
-      {session.showDownload ? "Hide" : "Show"} download button on the main screen
-    </button>
+  // Session-wide settings for the main screen, under the games on every view.
+  const settings = (
+    <details className="fold" {...settingsFold}>
+      <summary><h2>Settings</h2></summary>
+      <div className="steps">
+        <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
+          {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
+        </button>
+        <button onClick={() => void setShowDownload(code, !session.showDownload)}>
+          {session.showDownload ? "Hide" : "Show"} download button on the main screen
+        </button>
+      </div>
+    </details>
   );
 
   // Games on one side, players on the other: two columns on a wide screen (an iPad in landscape),
   // one column (games first) on a phone.
   const layout = (gameSide: React.ReactNode, playerSide: React.ReactNode) => (
     <section className="remote split">
-      <div className="remote-col">{gamePicker}{gameSide}</div>
+      <div className="remote-col">{gamePicker}{gameSide}{settings}</div>
       <div className="remote-col">{playerSide}</div>
     </section>
   );
 
   if (!game) {
     return layout(
-      <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
-        {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
-      </button>,
+      null,
       <>
         <h2>Players ({players.length})</h2>
         {players.length === 0 && <p className="muted">No players yet.</p>}
@@ -64,7 +86,6 @@ export function HostRemote({ code, session }: { code: string; session: Session }
             </li>
           ))}
         </ul>
-        {downloadToggle}
       </>,
     );
   }
@@ -108,7 +129,6 @@ export function HostRemote({ code, session }: { code: string; session: Session }
           );
         })}
       </ul>
-      {downloadToggle}
     </>,
   );
 }
