@@ -166,7 +166,7 @@ export function MainScreen() {
       {!game && (
         <>
           <h2>Pick a game</h2>
-          <GamePicks onPick={(id) => void setGame(code, id)} />
+          <GamePicks showBlurbs={!session.hideBlurbs} onPick={(id) => void setGame(code, id)} />
         </>
       )}
 
@@ -197,7 +197,7 @@ export function MainScreen() {
 }
 
 /** The game picker: index cards scattered at random angles (picked once, so they don't jump around). */
-function GamePicks({ onPick }: { onPick: (id: GameId) => void }) {
+function GamePicks({ showBlurbs, onPick }: { showBlurbs: boolean; onPick: (id: GameId) => void }) {
   const [scatter] = useState(() => Object.values(GAMES).map(() => ({
     "--tilt": `${(Math.random() * 7 - 3.5).toFixed(1)}deg`,
     "--dx": `${(Math.random() * 1.6 - 0.8).toFixed(2)}rem`,
@@ -209,7 +209,7 @@ function GamePicks({ onPick }: { onPick: (id: GameId) => void }) {
         <li key={g.id}>
           <button className="game-card" style={scatter[i] as React.CSSProperties} onClick={() => onPick(g.id)}>
             <span className="name">{g.name}</span>
-            <span className="blurb">{g.blurb}</span>
+            {showBlurbs && <span className="blurb">{g.blurb}</span>}
           </button>
         </li>
       ))}

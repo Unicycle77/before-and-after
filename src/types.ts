@@ -56,6 +56,8 @@ export interface Session {
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;
+  /** Host remote toggles this to hide the one-line descriptions on the main screen's game cards. */
+  hideBlurbs?: boolean;
   jukebox?: Jukebox;
   /** Where Before & After kept its data before there were games. Moved into `games` when a main screen opens the session. */
   media?: Record<string, BeforeAfterMedia>;

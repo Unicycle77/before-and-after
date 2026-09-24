@@ -184,6 +184,9 @@ export const setDisplay = (code: string, display: Display) =>
 export const setShowDownload = (code: string, show: boolean) =>
   set(ref(db(), `sessions/${code}/showDownload`), show);
 
+export const setHideBlurbs = (code: string, hide: boolean) =>
+  set(ref(db(), `sessions/${code}/hideBlurbs`), hide);
+
 /** Main screen: publishes the song titles found in the chosen music folder. */
 export const publishTracks = (code: string, titles: string[]) =>
   set(ref(db(), `sessions/${code}/jukebox/tracks`), titles);

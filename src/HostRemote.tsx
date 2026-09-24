@@ -1,5 +1,5 @@
 import { GAMES, activeGame } from "./games";
-import { removePlayer, setDisplay, setGame, setShowDownload, setUnlocked } from "./session";
+import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setUnlocked } from "./session";
 import type { Session } from "./types";
 
 /**
@@ -40,6 +40,9 @@ export function HostRemote({ code, session }: { code: string; session: Session }
             </li>
           ))}
         </ul>
+        <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
+          {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
+        </button>
         {downloadToggle}
       </section>
     );
