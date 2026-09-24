@@ -9,7 +9,7 @@ export const photos: Game = {
   id: "photos",
   name: "Photos",
   blurb: "Everyone sends in one photo.",
-  heading: "Photos",
+  heading: () => "Photos",
   firstStep: "photo",
   status: photoStatus,
   photoUrls: (session) => Object.values(allPhotos(session)).map((m) => m.photo).filter((u): u is string => !!u),

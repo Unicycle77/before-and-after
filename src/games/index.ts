@@ -3,6 +3,7 @@ import { activeGameId } from "../session";
 import type { SubmissionStatus } from "../submission";
 import type { Display, GameId, Session, Step } from "../types";
 import { beforeAfter } from "./beforeAfter";
+import { box } from "./box";
 import { photos } from "./photos";
 
 /**
@@ -15,10 +16,14 @@ export interface Game {
   /** One line on the game picker's card saying what players do. */
   blurb: string;
   /** The lobby's title while this game is on. */
-  heading: ReactNode;
+  heading(session: Session): ReactNode;
   /** Where picking a player (in the lobby or on the host phone) starts. */
   firstStep: Step;
-  status(session: Session, uid: string): SubmissionStatus;
+  /**
+   * Games where each player submits something: that player's status (lobby tiles, host list, lock).
+   * Absent for games the host runs (like [BLANK] in a Box): players are then just listed.
+   */
+  status?(session: Session, uid: string): SubmissionStatus;
   /** Photos the main screen downloads ahead of time, so reveals appear instantly. */
   photoUrls(session: Session): string[];
   /** A player's files for the download-all zip, named without an extension (e.g. "before"). */
@@ -34,7 +39,7 @@ export interface Game {
 }
 
 /** In the order the game picker shows them. */
-export const GAMES: Record<GameId, Game> = { photos, beforeAfter };
+export const GAMES: Record<GameId, Game> = { photos, beforeAfter, box };
 
 /** The game being played; undefined on the game selection screen. */
 export const activeGame = (session: Session): Game | undefined => {

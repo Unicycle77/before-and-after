@@ -4,25 +4,25 @@
       "$code": {
         ".read": true,
         ".write": "auth != null && (!data.exists() || data.child('hostUid').val() === auth.uid)",
-
         "hostUid": {
           ".write": "auth != null && data.exists() && newData.val() === auth.uid",
           ".validate": "newData.isString() && newData.val() === auth.uid"
         },
-        "createdAt": { ".validate": "newData.val() === now" },
-
+        "createdAt": {
+          ".validate": "newData.val() === now"
+        },
         "controllerUid": {
           ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))",
           ".validate": "newData.isString()"
         },
-
         "players": {
           "$uid": {
             ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
-            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20" }
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+            }
           }
         },
-
         "games": {
           "beforeAfter": {
             "media": {
@@ -36,7 +36,9 @@
                 ".validate": "newData.val() === true"
               }
             },
-            "$other": { ".validate": false }
+            "$other": {
+              ".validate": false
+            }
           },
           "photos": {
             "media": {
@@ -50,16 +52,30 @@
                 ".validate": "newData.val() === true"
               }
             },
-            "$other": { ".validate": false }
+            "$other": {
+              ".validate": false
+            }
           },
-          "$other": { ".validate": false }
+          "box": {
+            "round": {
+              ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+              "decision": {
+                ".write": "auth != null && !data.exists() && root.child('sessions').child($code).child('games').child('box').child('round').child('peeker').val() !== auth.uid && (root.child('sessions').child($code).child('games').child('box').child('round').child('players').child('a').val() === auth.uid || root.child('sessions').child($code).child('games').child('box').child('round').child('players').child('b').val() === auth.uid)",
+                ".validate": "newData.val() === 'swap' || newData.val() === 'keep'"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
         },
-
         "game": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
-          ".validate": "newData.val() === 'beforeAfter' || newData.val() === 'photos'"
+          ".validate": "newData.val() === 'beforeAfter' || newData.val() === 'photos' || newData.val() === 'box'"
         },
-
         "jukebox": {
           "tracks": {
             ".write": "auth != null && root.child('sessions').child($code).child('hostUid').val() === auth.uid"
@@ -71,22 +87,27 @@
             ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
           }
         },
-
         "hideBlurbs": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
           ".validate": "newData.isBoolean()"
         },
-
         "showDownload": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
           ".validate": "newData.isBoolean()"
         },
-
         "display": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
         },
-
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "boxSecrets": {
+      "$code": {
+        ".read": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid || root.child('sessions').child($code).child('games').child('box').child('round').child('peeker').val() === auth.uid)",
+        ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+        ".validate": "newData.child('inBox').val() === 'L' || newData.child('inBox').val() === 'R'"
       }
     }
   }

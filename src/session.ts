@@ -2,7 +2,7 @@ import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth"
 import { get, onValue, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
-import { GAME_IDS, type BeforeAfterMedia, type Display, type GameId, type Jukebox, type Session } from "./types";
+import { type BeforeAfterMedia, type Display, type GameId, type Jukebox, type Session } from "./types";
 
 let signIn: Promise<User> | undefined;
 
@@ -141,9 +141,12 @@ export function extractCode(text: string): string | null {
   return /^[A-Z0-9]{4}$/.test(t) ? t : null;
 }
 
+/** The games players submit things to (the others, like [BLANK] in a Box, are run by the host). */
+const SUBMISSION_GAMES: GameId[] = ["photos", "beforeAfter"];
+
 /** Clears what a player has submitted in every game (and any unlocks). */
 const clearSubmissions = (code: string, uid: string) =>
-  Promise.all(GAME_IDS.flatMap((game) => [
+  Promise.all(SUBMISSION_GAMES.flatMap((game) => [
     remove(ref(db(), `sessions/${code}/games/${game}/media/${uid}`)),
     remove(ref(db(), `sessions/${code}/games/${game}/unlocked/${uid}`)),
   ]));

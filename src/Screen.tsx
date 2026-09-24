@@ -15,7 +15,7 @@ export function screenState(session: Session) {
   const videoPlaying = display.step === "video" && display.playing !== false;
   // A step without a player shows everyone; one with a player needs them to still be here and to have sent something.
   const onStage = !!game && display.step !== "list"
-    && (!display.uid || (!!session.players?.[display.uid] && game.status(session, display.uid) !== "waiting"));
+    && (!display.uid || (!!session.players?.[display.uid] && game.status?.(session, display.uid) !== "waiting"));
   return { game, display, videoPlaying, onStage };
 }
 
@@ -42,7 +42,7 @@ export function Screen({ code, session, viewOnly = false, footer }: {
     <main className="lobby">
       <header>
         <div>
-          <h1>{game ? game.heading : "Taskmaster"}</h1>
+          <h1>{game ? game.heading(session) : "Taskmaster"}</h1>
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>
@@ -69,13 +69,13 @@ export function Screen({ code, session, viewOnly = false, footer }: {
 
       <h2>
         Players ({players.length})
-        {game && players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => game.status(session, uid) === "submitted").length} submitted</span>}
+        {game?.status && players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => game.status?.(session, uid) === "submitted").length} submitted</span>}
       </h2>
       {players.length === 0 && <p className="muted">Waiting for players to join…</p>}
       <ul className="tiles">
         {players.map(([uid, p]) => (
-          <Tile key={uid} player={p} status={game?.status(session, uid)}
-            onPick={viewOnly || !game ? undefined : () => void setDisplay(code, { uid, step: game.firstStep })} />
+          <Tile key={uid} player={p} status={game?.status?.(session, uid)}
+            onPick={viewOnly || !game?.status ? undefined : () => void setDisplay(code, { uid, step: game.firstStep })} />
         ))}
       </ul>
       {!viewOnly && (
@@ -84,7 +84,7 @@ export function Screen({ code, session, viewOnly = false, footer }: {
             {session.controllerUid
               ? <>🎮 Host remote connected. <button className="link" onClick={() => void resetController(code)}>Reset</button></>
               : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
-            {" "}{game ? "You can also click a player here." : "You can also pick a game here."}
+            {" "}{!game ? "You can also pick a game here." : game.status ? "You can also click a player here." : ""}
           </p>
           <p className="muted small">
             📺 To show this on another screen too, open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/screen</strong> there and enter the same code.
@@ -114,7 +114,8 @@ function GamePicks({ showBlurbs, onPick }: { showBlurbs: boolean; onPick?: (id: 
         <li key={g.id}>
           <button className={onPick ? "game-card" : "game-card static"} style={scatter[i] as React.CSSProperties}
             tabIndex={onPick ? undefined : -1} onClick={() => onPick?.(g.id)}>
-            <span className="name">{g.name}</span>
+            {/* long titles are set smaller, so they stay on the title line */}
+            <span className={g.name.length > 14 ? "name long" : "name"}>{g.name}</span>
             {showBlurbs && <span className="blurb">{g.blurb}</span>}
           </button>
         </li>

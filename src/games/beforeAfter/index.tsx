@@ -9,7 +9,7 @@ export const beforeAfter: Game = {
   id: "beforeAfter",
   name: "Before & After",
   blurb: "Everyone films one video, from before to after.",
-  heading: <>Before <span className="amp">&amp;</span> After</>,
+  heading: () => <>Before <span className="amp">&amp;</span> After</>,
   firstStep: "before",
   status: (session, uid) => submissionStatus(mediaOf(session, uid)),
   photoUrls: (session) => Object.values(allMedia(session)).flatMap((m) => [m.before, m.after]).filter((u): u is string => !!u),

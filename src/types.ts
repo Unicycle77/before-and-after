@@ -1,13 +1,13 @@
 /** Every game a session can play. The players are shared; each game keeps its own submissions. */
-export const GAME_IDS = ["photos", "beforeAfter"] as const;
+export const GAME_IDS = ["photos", "beforeAfter", "box"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
 /**
  * What the main screen is showing. Only host / first-player may write this.
  * "list" = the lobby. The other steps belong to the active game; a step without a uid shows everyone
- * ("review" = everyone's before & after on one screen; "grid" = everyone's photo).
+ * ("review" = everyone's before & after on one screen; "grid" = everyone's photo; "boxes" = [BLANK] in a Box).
  */
-export type Step = "list" | "before" | "after" | "both" | "video" | "review" | "photo" | "grid";
+export type Step = "list" | "before" | "after" | "both" | "video" | "review" | "photo" | "grid" | "boxes";
 
 export interface Display {
   uid?: string;
@@ -28,6 +28,28 @@ export type BeforeAfterMedia = Partial<Record<"before" | "after" | "video", stri
 
 /** Download URL of a player's one Photos submission. */
 export interface PhotosMedia { photo?: string }
+
+/** The two boxes of [BLANK] in a Box: "L" starts with the left player, "R" with the right one. */
+export type BoxKey = "L" | "R";
+
+/** A round of [BLANK] in a Box. Which box holds the object is secret (see `BoxSecret`) until a box is opened. */
+export interface BoxRound {
+  /** Built-in object id (see games/box/objects.ts), e.g. "carrot". */
+  object: string;
+  /** Left and right player: box L starts with `a`, box R with `b`. */
+  players: { a: string; b: string };
+  /** The one player allowed to look inside their box. */
+  peeker: string;
+  /** The other player's one choice. */
+  decision?: "swap" | "keep";
+  /** Opened boxes and what was in them. */
+  revealed?: Partial<Record<BoxKey, "object" | "empty">>;
+  /** When the round was set up (tells rounds apart, e.g. to restart the stage's animations). */
+  startedAt: number;
+}
+
+/** Kept outside the session (at boxSecrets/{code}) so only the host, the main screen and the peeker can read it. */
+export interface BoxSecret { inBox: BoxKey }
 
 /** One game's submissions within a session. */
 export interface GameData<M> {
@@ -52,7 +74,7 @@ export interface Session {
   players?: Record<string, Player>;
   /** The game players see and the main screen shows. Absent = the game selection screen (where every session starts). */
   game?: GameId;
-  games?: { beforeAfter?: GameData<BeforeAfterMedia>; photos?: GameData<PhotosMedia> };
+  games?: { beforeAfter?: GameData<BeforeAfterMedia>; photos?: GameData<PhotosMedia>; box?: { round?: BoxRound } };
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;

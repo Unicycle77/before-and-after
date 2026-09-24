@@ -72,20 +72,27 @@ export function HostRemote({ code, session }: { code: string; session: Session }
     </section>
   );
 
+  // Just the names (and remove): on the game selection screen, and in games the host runs.
+  const plainList = (
+    <>
+      {players.length === 0 && <p className="muted">No players yet.</p>}
+      <ul className="picker">
+        {players.map(([uid, p]) => (
+          <li key={uid}>
+            <button disabled><span>{p.name}</span></button>
+            <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+
   if (!game) {
     return layout(
       null,
       <>
         <h2>Players ({players.length})</h2>
-        {players.length === 0 && <p className="muted">No players yet.</p>}
-        <ul className="picker">
-          {players.map(([uid, p]) => (
-            <li key={uid}>
-              <button disabled><span>{p.name}</span></button>
-              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
-            </li>
-          ))}
-        </ul>
+        {plainList}
       </>,
     );
   }
@@ -106,11 +113,13 @@ export function HostRemote({ code, session }: { code: string; session: Session }
     <>
       <h2>Players ({players.length})</h2>
       <game.HostLobby code={code} session={session} display={display} />
+      {!game.status ? plainList : <>
       {players.length === 0 && <p className="muted">No players yet.</p>}
       <ul className="picker">
         {players.map(([uid, p]) => {
-          const status = game.status(session, uid);
-          const unlocked = !!session.games?.[game.id]?.unlocked?.[uid];
+          const status = game.status!(session, uid);
+          const data = session.games?.[game.id];
+          const unlocked = !!(data && "unlocked" in data && data.unlocked?.[uid]);
           return (
             <li key={uid}>
               <button disabled={status !== "submitted"} onClick={() => void setDisplay(code, { uid, step: game.firstStep })}>
@@ -129,6 +138,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
           );
         })}
       </ul>
+      </>}
     </>,
   );
 }
