@@ -7,6 +7,8 @@ export interface Recent { code: string; at: number }
 export const HOSTED_KEY = "ba.recentSessions";
 /** Sessions this device has watched as an extra screen. */
 export const WATCHED_KEY = "ba.recentWatched";
+/** Sessions this device has controlled as the host remote. */
+export const REMOTE_KEY = "ba.recentRemote";
 const MAX_RECENT = 6;
 
 export function loadRecent(key: string): Recent[] {

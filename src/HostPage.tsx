@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { HostRemote } from "./HostRemote";
 import { JukeboxRemote } from "./JukeboxRemote";
 import { QrScannerModal } from "./QrScannerModal";
+import { REMOTE_KEY, RecentList, loadRecent, saveRecent, withRecent, withoutRecent } from "./recent";
 import { JoinError, claimController, extractCode, releaseController, store, useSession, useUid } from "./session";
 
 const KEY = "ba.remoteCode";
@@ -14,6 +15,12 @@ export function HostPage() {
   const [tab, setTab] = useState<"screen" | "music">("screen");
 
   const disconnect = () => { store.set(KEY, ""); setCode(""); };
+
+  // Connected: keep this session at the top of the phone's recent list.
+  const connected = !!code && !!uid && session?.controllerUid === uid;
+  useEffect(() => {
+    if (connected) saveRecent(REMOTE_KEY, withRecent(loadRecent(REMOTE_KEY), code));
+  }, [connected, code]);
 
   // Session gone, or the main screen reset our remote → back to code entry.
   useEffect(() => {
@@ -43,12 +50,20 @@ function Connect({ onConnected }: { onConnected: (code: string) => void }) {
   const [error, setError] = useState<string>();
   const [scanning, setScanning] = useState(false);
   const autoTried = useRef(false);
+  // Sessions this phone has been the host remote for.
+  const [recent, setRecent] = useState(() => loadRecent(REMOTE_KEY));
 
   async function connect(c: string) {
     setBusy(true);
     setError(undefined);
     try { onConnected(await claimController(c)); }
-    catch (err) { setError(err instanceof JoinError ? err.message : "Something went wrong. Try again."); }
+    catch (err) {
+      // A session that no longer exists drops off the recent list.
+      if (err instanceof JoinError && err.message.startsWith("No session found")) {
+        setRecent(saveRecent(REMOTE_KEY, withoutRecent(recent, c.trim().toUpperCase())));
+      }
+      setError(err instanceof JoinError ? err.message : "Something went wrong. Try again.");
+    }
     finally { setBusy(false); }
   }
 
@@ -80,6 +95,7 @@ function Connect({ onConnected }: { onConnected: (code: string) => void }) {
         <button type="submit" disabled={busy || code.length !== 4}>{busy ? "Connecting…" : "Connect"}</button>
         {error && <p className="error">{error}</p>}
       </form>
+      <RecentList recent={recent} busy={busy} onPick={(c) => void connect(c)} />
       {scanning && <QrScannerModal onClose={() => setScanning(false)} onScan={(t) => {
         setScanning(false);
         const c = extractCode(t);
