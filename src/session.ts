@@ -155,6 +155,10 @@ export const setUnlocked = (code: string, game: GameId, uid: string, unlocked: b
 /** The game players see and the main screen shows (sessions from before there were games play Before & After). */
 export const activeGameId = (session: Session): GameId => session.game ?? "beforeAfter";
 
+/** Host: makes another game the active one. Players' phones switch to it and the main screen goes back to the lobby. */
+export const setGame = (code: string, game: GameId) =>
+  update(ref(db(), `sessions/${code}`), { game, display: { step: "list" } });
+
 /**
  * Main screen: moves a session from before there were games into the games layout, so it can be resumed.
  * Only the session's host can do this (it rewrites the whole session).

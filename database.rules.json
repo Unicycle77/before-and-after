@@ -38,12 +38,26 @@
             },
             "$other": { ".validate": false }
           },
+          "photos": {
+            "media": {
+              "$uid": {
+                ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || !data.child('photo').exists() || root.child('sessions').child($code).child('games').child('photos').child('unlocked').child($uid).val() === true)) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
+              }
+            },
+            "unlocked": {
+              "$uid": {
+                ".write": "auth != null && ((auth.uid === $uid && !newData.exists()) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+                ".validate": "newData.val() === true"
+              }
+            },
+            "$other": { ".validate": false }
+          },
           "$other": { ".validate": false }
         },
 
         "game": {
           ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
-          ".validate": "newData.val() === 'beforeAfter'"
+          ".validate": "newData.val() === 'beforeAfter' || newData.val() === 'photos'"
         },
 
         "jukebox": {

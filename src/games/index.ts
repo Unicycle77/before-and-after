@@ -3,6 +3,7 @@ import { activeGameId } from "../session";
 import type { SubmissionStatus } from "../submission";
 import type { Display, GameId, Session, Step } from "../types";
 import { beforeAfter } from "./beforeAfter";
+import { photos } from "./photos";
 
 /**
  * What a game plugs into the shared screens. The session, its players, the lobby, the jukebox and
@@ -30,6 +31,6 @@ export interface Game {
   HostLobby: ComponentType<{ code: string; session: Session; display: Display }>;
 }
 
-export const GAMES: Record<GameId, Game> = { beforeAfter };
+export const GAMES: Record<GameId, Game> = { beforeAfter, photos };
 
 export const activeGame = (session: Session): Game => GAMES[activeGameId(session)];

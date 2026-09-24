@@ -1,6 +1,11 @@
 # Before & After
 
-Players join with a 4-letter code (or QR) on their phone and submit a **before** photo, an **after** photo, and a **video** of what happened in between. The main screen shows the player list; the host (not a player) drives it from their phone at `/host` using the same code: before → after → (pause to discuss) → video.
+Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players; the host switches between them (host phone: top of the Screen tab; main screen: "Switch to…" in the lobby), and players' phones always show the active one:
+
+- **Before & After**: each player records a **video**; its first and last frames become their **before** and **after**. The host (not a player) drives the main screen from their phone at `/host` using the same code: before → after → (pause to discuss) → video.
+- **Photos**: each player submits one **photo**. The host shows them one at a time (Previous / Next) or everyone at once.
+
+In both games a submission locks until the host unlocks that player. Each game lives in `src/games/<id>/`; `src/games/index.ts` lists what a game provides to the shared screens.
 
 - `/` — main screen (shared display). `/play` — players' phones. `/host` — host remote.
 - Firebase: Anonymous Auth, Realtime Database (session state), Storage (media).

@@ -1,5 +1,5 @@
-import { activeGame } from "./games";
-import { removePlayer, setDisplay, setShowDownload, setUnlocked } from "./session";
+import { GAMES, activeGame } from "./games";
+import { removePlayer, setDisplay, setGame, setShowDownload, setUnlocked } from "./session";
 import type { Session } from "./types";
 
 /** The host's phone: pick a player, then the active game's controls choose what the main screen shows. */
@@ -9,9 +9,21 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   const display = session.display ?? { step: "list" as const };
   const current = display.uid ? session.players?.[display.uid] : undefined;
 
+  // Always at the top, so it keeps its place on every view.
+  const switcher = (
+    <div className="steps two">
+      {Object.values(GAMES).map((g) => (
+        <button key={g.id} className={g.id === game.id ? "step active" : "step"} onClick={() => { if (g.id !== game.id) void setGame(code, g.id); }}>
+          {g.name}
+        </button>
+      ))}
+    </div>
+  );
+
   if (display.step !== "list" && display.uid && current) {
     return (
       <section className="remote">
+        {switcher}
         <h2>{current.name}</h2>
         <game.HostPlayer code={code} session={session} display={display} uid={display.uid} />
         <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
@@ -21,6 +33,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
 
   return (
     <section className="remote">
+      {switcher}
       <h2>Pick a player</h2>
       <game.HostLobby code={code} session={session} display={display} />
       {players.length === 0 && <p className="muted">No players yet.</p>}

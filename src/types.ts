@@ -1,13 +1,13 @@
 /** Every game a session can play. The players are shared; each game keeps its own submissions. */
-export const GAME_IDS = ["beforeAfter"] as const;
+export const GAME_IDS = ["beforeAfter", "photos"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
 /**
  * What the main screen is showing. Only host / first-player may write this.
  * "list" = the lobby. The other steps belong to the active game; a step without a uid shows everyone
- * ("review" = everyone's before & after on one screen).
+ * ("review" = everyone's before & after on one screen; "grid" = everyone's photo).
  */
-export type Step = "list" | "before" | "after" | "both" | "video" | "review";
+export type Step = "list" | "before" | "after" | "both" | "video" | "review" | "photo" | "grid";
 
 export interface Display {
   uid?: string;
@@ -25,6 +25,9 @@ export interface Player {
 
 /** Download URLs of a player's Before & After submission. RTDB drops empty objects, so all optional. */
 export type BeforeAfterMedia = Partial<Record<"before" | "after" | "video", string>>;
+
+/** Download URL of a player's one Photos submission. */
+export interface PhotosMedia { photo?: string }
 
 /** One game's submissions within a session. */
 export interface GameData<M> {
@@ -49,7 +52,7 @@ export interface Session {
   players?: Record<string, Player>;
   /** The game players see and the main screen shows. Absent in sessions from before there were games: Before & After. */
   game?: GameId;
-  games?: { beforeAfter?: GameData<BeforeAfterMedia> };
+  games?: { beforeAfter?: GameData<BeforeAfterMedia>; photos?: GameData<PhotosMedia> };
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;

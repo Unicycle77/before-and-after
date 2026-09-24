@@ -1,11 +1,11 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { DownloadZip } from "./DownloadZip";
-import { activeGame } from "./games";
+import { GAMES, activeGame } from "./games";
 import { Jukebox } from "./Jukebox";
 import { preloadImages } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
-import { JoinError, createSession, ensureSignedIn, migrateLegacySession, resetController, resumeSession, setDisplay, store, useSession } from "./session";
+import { JoinError, createSession, ensureSignedIn, migrateLegacySession, resetController, resumeSession, setDisplay, setGame, store, useSession } from "./session";
 import type { SubmissionStatus } from "./submission";
 import type { Player } from "./types";
 
@@ -179,6 +179,12 @@ export function MainScreen() {
           ? <>🎮 Host remote connected. <button className="link" onClick={() => void resetController(code)}>Reset</button></>
           : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
         {" "}You can also click a player here.
+      </p>
+      <p className="muted small">
+        Switch to{" "}
+        {Object.values(GAMES).filter((g) => g.id !== game.id).map((g) => (
+          <button key={g.id} className="link" onClick={() => void setGame(code, g.id)}>{g.name}</button>
+        ))}
       </p>
       {session.showDownload && <DownloadZip code={code} session={session} />}
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
