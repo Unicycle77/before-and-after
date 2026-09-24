@@ -75,7 +75,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   return (
     <section className="remote">
       {gamePicker}
-      <h2>Pick a player</h2>
+      <h2>Players ({players.length})</h2>
       <game.HostLobby code={code} session={session} display={display} />
       {players.length === 0 && <p className="muted">No players yet.</p>}
       <ul className="picker">
