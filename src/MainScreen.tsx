@@ -93,7 +93,7 @@ export function MainScreen() {
   if (!code) {
     return (
       <main className="center">
-        <h1>TM</h1>
+        <h1>Taskmaster</h1>
         <button className="big" disabled={busy} onClick={() => void open(createSession)}>Start a session</button>
         <form className="resume" onSubmit={(e) => { e.preventDefault(); void open(() => resumeSession(resumeCode)); }}>
           <label>Or resume a session
@@ -145,7 +145,7 @@ export function MainScreen() {
     <main className="lobby">
       <header>
         <div>
-          <h1>{game ? game.heading : "TM"}</h1>
+          <h1>{game ? game.heading : "Taskmaster"}</h1>
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>

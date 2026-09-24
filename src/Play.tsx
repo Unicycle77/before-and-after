@@ -60,7 +60,7 @@ function Join({ onJoined }: { onJoined: (code: string) => void }) {
 
   return (
     <main className="join">
-      <h1>TM</h1>
+      <h1>Taskmaster</h1>
       <form onSubmit={(e) => void submit(e)}>
         <label>Game code
           <div className="row">
