@@ -45,7 +45,7 @@ export async function downloadAllMedia(
   const zip = await downloadZip(files).blob();
   const link = document.createElement("a");
   link.href = URL.createObjectURL(zip);
-  link.download = `before-and-after-${code}.zip`;
+  link.download = `tm-party-games-${code}.zip`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 60_000);
 }

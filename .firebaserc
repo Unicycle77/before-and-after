@@ -2,6 +2,17 @@
   "projects": {
     "default": "before-and-after-6a096"
   },
-  "targets": {},
+  "targets": {
+    "before-and-after-6a096": {
+      "hosting": {
+        "app": [
+          "tm-party-games"
+        ],
+        "legacy": [
+          "before-and-after-6a096"
+        ]
+      }
+    }
+  },
   "etags": {}
 }

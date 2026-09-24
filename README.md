@@ -1,4 +1,6 @@
-# Before & After
+# TM Party Games
+
+Live at **https://tm-party-games.web.app** (the old `before-and-after-6a096.web.app` address redirects there).
 
 Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players. Every session starts on a game selection screen; the host picks a game there (host phone or main screen) and goes back to it with "← Games" to pick another; games are never switched directly. Players' phones always show the active game (or wait while one is picked):
 
@@ -21,7 +23,7 @@ In both games a submission locks until the host unlocks that player. Each game l
 The main screen's **Download all photos & videos** button (hidden until the host taps "Show download button on the main screen" on their phone) zips every submitted file in the browser (one folder per player). Because it fetches the files with JavaScript, the Storage bucket needs a one-time CORS setting. In [Google Cloud Shell](https://console.cloud.google.com/?cloudshell=true) (project `before-and-after-6a096`):
 
 ```sh
-echo '[{"origin":["https://before-and-after-6a096.web.app","https://before-and-after-6a096.firebaseapp.com","http://localhost:5173"],"method":["GET"],"maxAgeSeconds":3600}]' > cors.json
+echo '[{"origin":["https://tm-party-games.web.app","https://tm-party-games.firebaseapp.com","https://before-and-after-6a096.web.app","https://before-and-after-6a096.firebaseapp.com","http://localhost:5173"],"method":["GET"],"maxAgeSeconds":3600}]' > cors.json
 gcloud storage buckets update gs://before-and-after-6a096.firebasestorage.app --cors-file=cors.json
 ```
 

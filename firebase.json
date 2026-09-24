@@ -1,9 +1,21 @@
 {
   "database": { "rules": "database.rules.json" },
   "storage": { "rules": "storage.rules" },
-  "hosting": {
-    "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
-  }
+  "hosting": [
+    {
+      "target": "app",
+      "public": "dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    },
+    {
+      "target": "legacy",
+      "public": "dist",
+      "ignore": ["**/*"],
+      "redirects": [
+        { "source": "/", "destination": "https://tm-party-games.web.app/", "type": 301 },
+        { "source": "/:path*", "destination": "https://tm-party-games.web.app/:path", "type": 301 }
+      ]
+    }
+  ]
 }
