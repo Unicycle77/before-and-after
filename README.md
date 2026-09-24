@@ -9,7 +9,7 @@ Players join with a 4-letter code (or QR) on their phone. A session has two game
 
 In both games a submission locks until the host unlocks that player. Each game lives in `src/games/<id>/`; `src/games/index.ts` lists what a game provides to the shared screens.
 
-- `/` — main screen (shared display). `/play` — players' phones. `/host` — host remote.
+- `/` — main screen (shared display). `/play` — players' phones. `/host` — host remote. `/screen` — an extra, view-only copy of the main screen (e.g. in another room): same lobby, reveals and videos with sound, but no music (the songs stay on the main screen's PC) and no controls. After a refresh it asks for one click so video sound is allowed.
 - Firebase: Anonymous Auth, Realtime Database (session state), Storage (media).
 
 ## Setup

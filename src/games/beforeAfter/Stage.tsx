@@ -9,7 +9,7 @@ import { allMedia, mediaOf } from "./data";
 import { StageControls } from "./StageControls";
 
 /** Main screen: one player's before / after / video in a gold frame, or everyone's on one screen. */
-export function Stage({ code, session, display }: { code: string; session: Session; display: Display }) {
+export function Stage({ code, session, display, viewOnly }: { code: string; session: Session; display: Display; viewOnly: boolean }) {
   // Once a player is picked, start fetching their video in the background: by the time the host
   // gets to "Video" (after the before/after discussion) it plays instantly from memory.
   const video = display.uid ? mediaOf(session, display.uid).video : undefined;
@@ -19,7 +19,7 @@ export function Stage({ code, session, display }: { code: string; session: Sessi
     const media = allMedia(session);
     return (
       <Review players={session.players ?? {}} photosOf={(uid) => [media[uid]?.before, media[uid]?.after]} labels={["before", "after"]}>
-        <StageControls code={code} display={display} hasVideo={false} />
+        {!viewOnly && <StageControls code={code} display={display} hasVideo={false} />}
       </Review>
     );
   }
@@ -39,7 +39,7 @@ export function Stage({ code, session, display }: { code: string; session: Sessi
           )}
         </Framed>
       )) : step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
-          onEnded={() => void patchDisplay(code, { playing: false })} /> : step === "before" || step === "after" ? (
+          onEnded={() => { if (!viewOnly) void patchDisplay(code, { playing: false }); }} /> : step === "before" || step === "after" ? (
         <Framed key={step}>
           {(setRatio) => (
             <SafeImg src={media[step] ?? ""} alt={`${name} ${step}`}
@@ -49,7 +49,7 @@ export function Stage({ code, session, display }: { code: string; session: Sessi
         </Framed>
       ) : null}
       <div className="stage-label"><span>{both ? "before & after" : step}</span> · {name}</div>
-      <StageControls code={code} display={display} hasVideo={!!media.video} />
+      {!viewOnly && <StageControls code={code} display={display} hasVideo={!!media.video} />}
     </main>
   );
 }

@@ -23,8 +23,8 @@ export interface Game {
   photoUrls(session: Session): string[];
   /** A player's files for the download-all zip, named without an extension (e.g. "before"). */
   files(session: Session, uid: string): { name: string; url: string }[];
-  /** Main screen, for every step but "list". */
-  Stage: ComponentType<{ code: string; session: Session; display: Display }>;
+  /** Main screen, for every step but "list". `viewOnly` (an extra screen): no controls, and never writes to the session. */
+  Stage: ComponentType<{ code: string; session: Session; display: Display; viewOnly: boolean }>;
   /** The player's phone, below their name. */
   Player: ComponentType<{ code: string; uid: string; session: Session }>;
   /** Host phone: what the main screen shows of the picked player. */

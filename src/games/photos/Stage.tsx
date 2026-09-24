@@ -8,8 +8,8 @@ import type { Display, Session } from "../../types";
 import { allPhotos, neighbour, photoOf } from "./data";
 
 /** Main screen: one player's photo in a gold frame, or everyone's on one screen. */
-export function Stage({ code, session, display }: { code: string; session: Session; display: Display }) {
-  const controls = <StageControls code={code} session={session} display={display} />;
+export function Stage({ code, session, display, viewOnly }: { code: string; session: Session; display: Display; viewOnly: boolean }) {
+  const controls = viewOnly ? null : <StageControls code={code} session={session} display={display} />;
 
   if (display.step === "grid" || !display.uid) {
     const photos = allPhotos(session);

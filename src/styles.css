@@ -162,6 +162,8 @@ input::placeholder { color: #8b7a63; }
 .tiles li:nth-child(even) .tile { transform: rotate(1.2deg); }
 .tiles li:nth-child(3n) .tile { transform: rotate(-0.4deg); }
 .tile:disabled { opacity: 0.7; }
+/* on a view-only screen: looks the same, but nothing reacts to the mouse */
+.tile.static, .game-card.static { pointer-events: none; }
 .tile:not(:disabled):hover { transform: rotate(0deg) scale(1.04); border-color: var(--gold-bright); box-shadow: 0 10px 22px #000c, 0 0 0 3px var(--gold); }
 .tile .name { font-size: 1.5rem; }
 .status { font-size: 0.85rem; color: #7a6a55; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -280,7 +282,7 @@ progress { width: 100%; accent-color: var(--burgundy); }
 .picker li { display: flex; gap: 0.5rem; }
 .picker li > button:first-child { flex: 1; display: flex; flex-direction: column; text-align: left; }
 .picker .x, .picker .lock { padding: 0.7rem 1rem; }
-.qr-overlay { position: fixed; inset: 0; background: #000e; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; z-index: 10; }
+.qr-overlay, .start-overlay { position: fixed; inset: 0; background: #000e; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; z-index: 10; }
 .qr-overlay video { width: min(90vw, 420px); }
 button .muted { color: #7a6a55; }
 
