@@ -14,6 +14,8 @@
   --gold: #d9b24c;
   --gold-bright: #f3d37a;
   --gold-dark: #8a6a1f;
+  --gold-edge: #7a5a14;
+  --gold-gradient: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f);
   --paper: #efe6d2;
   --ink: #2b1d12;
   --fg: #f6ecd6;
@@ -55,11 +57,14 @@ button {
 button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 #0006; }
 button:not(:disabled):hover { filter: brightness(1.06); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
-button.big {
-  background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f);
-  border-color: #7a5a14;
-  color: #2a1a05;
+/* gold: the main action (.big) and whatever is currently selected (.active) */
+button.big, button.active {
+  background: var(--gold-gradient);
+  border-color: var(--gold-edge);
   font-weight: bold;
+}
+button.big {
+  color: #2a1a05;
   font-size: 1.25rem;
   padding: 1rem 1.5rem;
   width: 100%;
@@ -137,9 +142,9 @@ input::placeholder { color: #8b7a63; }
 .stamp {
   align-self: flex-start;
   padding: 0.05rem 0.7rem;
-  border: 3px solid #7a5a14;
+  border: 3px solid var(--gold-edge);
   border-radius: 4px;
-  color: #7a5a14;
+  color: var(--gold-edge);
   background: rgba(217, 178, 76, 0.22);
   font-weight: bold;
   font-size: 0.95rem;
@@ -256,11 +261,6 @@ button .muted { color: #7a6a55; }
 .steps { display: grid; gap: 0.6rem; }
 .steps.two { grid-template-columns: 1fr 1fr; }
 .steps button { padding: 1.1rem 0.5rem; font-size: 1.2rem; }
-.steps button.active {
-  background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f);
-  border-color: #7a5a14;
-  font-weight: bold;
-}
 
 .download { margin-top: 2rem; display: grid; gap: 0.4rem; justify-items: start; }
 
@@ -274,7 +274,6 @@ body.idle-cursor .stage { cursor: none; }
 }
 .stage-controls.show { opacity: 1; pointer-events: auto; }
 .stage-controls button { padding: 0.5rem 0.9rem; }
-.stage-controls button.active { background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f); border-color: #7a5a14; font-weight: bold; }
 
 /* jukebox */
 .jukebox-chip { position: fixed; left: 1rem; bottom: 1rem; z-index: 3; display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; max-width: 60vw;
@@ -282,14 +281,12 @@ body.idle-cursor .stage { cursor: none; }
 .jukebox-chip button:not(.link) { padding: 0.4rem 0.8rem; }
 .tabs { display: flex; gap: 0.5rem; }
 .tabs button { flex: 1; }
-.tabs button.active { background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f); border-color: #7a5a14; font-weight: bold; }
 .steps.three { grid-template-columns: 1fr 1.3fr 1fr; }
 .now-playing { font-family: var(--typewriter); color: var(--gold-bright); font-size: 1.15rem; margin: 0; min-height: 1.5em; overflow-wrap: anywhere; }
 .volume { display: grid; gap: 0.3rem; }
 .volume input[type="range"] { padding: 0; height: 2rem; accent-color: var(--gold); background: none; border: 0; }
 .tracklist { list-style: none; margin: 0; padding: 0; max-height: 45vh; overflow: auto; display: grid; gap: 0.4rem; }
 .tracklist button { width: 100%; text-align: left; padding: 0.6rem 0.8rem; }
-.tracklist button.active { background: linear-gradient(#f3d37a, #d9b24c 55%, #b8902f); border-color: #7a5a14; font-weight: bold; }
 .tracklist button { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
 .tracklist .title { min-width: 0; overflow-wrap: anywhere; }
 .tracklist .dur { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.75; }
