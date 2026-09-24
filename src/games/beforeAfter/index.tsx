@@ -8,6 +8,7 @@ import { Stage } from "./Stage";
 export const beforeAfter: Game = {
   id: "beforeAfter",
   name: "Before & After",
+  blurb: "Everyone films one video, from before to after.",
   heading: <>Before <span className="amp">&amp;</span> After</>,
   firstStep: "before",
   status: (session, uid) => submissionStatus(mediaOf(session, uid)),

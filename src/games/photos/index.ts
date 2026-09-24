@@ -8,6 +8,7 @@ import { Stage } from "./Stage";
 export const photos: Game = {
   id: "photos",
   name: "Photos",
+  blurb: "Everyone sends in one photo.",
   heading: "Photos",
   firstStep: "photo",
   status: photoStatus,

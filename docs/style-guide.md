@@ -60,6 +60,7 @@ Paper background, `--gold-dark` border, 6px radius, full width. Wrap them in a `
 
 ### Cards and panels
 - **Player tile** (`.tile`): an index card, 3px radius, **slightly rotated** (`-1deg`, `1.2deg`, `-0.4deg` by position). On hover it straightens, grows 4% and gets a gold ring.
+- **Game card** (`.game-card`): the game picker's 3x5 index card: 5:3, a `--burgundy` rule under the title and faint ruled lines below it, in a 4-column grid (3 on narrower screens). Each card gets a random tilt and nudge (`--tilt`, `--dx`, `--dy`) when the picker opens, so they look scattered on a table; hover straightens it like a tile. Keep the one-line `blurb` short enough to fit the card.
 - **Slot** (`.slot`): the phone's paper panel. The heading is `--burgundy`, the hints are `#6b5a44`.
 - **Floating label** (`.stage-label`, `.review-name`, `.review-loading`, `.sound-hint`): a paper strip over the stage, typewriter font, centred, with a drop shadow.
 

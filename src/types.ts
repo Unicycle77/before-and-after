@@ -1,5 +1,5 @@
 /** Every game a session can play. The players are shared; each game keeps its own submissions. */
-export const GAME_IDS = ["beforeAfter", "photos"] as const;
+export const GAME_IDS = ["photos", "beforeAfter"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
 /**

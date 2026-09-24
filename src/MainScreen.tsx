@@ -7,7 +7,7 @@ import { preloadImages } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
 import { JoinError, createSession, ensureSignedIn, migrateLegacySession, resetController, resumeSession, setDisplay, setGame, store, useSession } from "./session";
 import type { SubmissionStatus } from "./submission";
-import type { Player } from "./types";
+import type { GameId, Player } from "./types";
 
 const KEY = "ba.hostCode";
 const RECENT_KEY = "ba.recentSessions";
@@ -166,11 +166,7 @@ export function MainScreen() {
       {!game && (
         <>
           <h2>Pick a game</h2>
-          <div className="game-picks">
-            {Object.values(GAMES).map((g) => (
-              <button key={g.id} className="big" onClick={() => void setGame(code, g.id)}>{g.name}</button>
-            ))}
-          </div>
+          <GamePicks onPick={(id) => void setGame(code, id)} />
         </>
       )}
 
@@ -197,6 +193,27 @@ export function MainScreen() {
     </main>
     <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi />
     </>
+  );
+}
+
+/** The game picker: index cards scattered at random angles (picked once, so they don't jump around). */
+function GamePicks({ onPick }: { onPick: (id: GameId) => void }) {
+  const [scatter] = useState(() => Object.values(GAMES).map(() => ({
+    "--tilt": `${(Math.random() * 7 - 3.5).toFixed(1)}deg`,
+    "--dx": `${(Math.random() * 1.6 - 0.8).toFixed(2)}rem`,
+    "--dy": `${(Math.random() * 1.6 - 0.8).toFixed(2)}rem`,
+  })));
+  return (
+    <ul className="game-picks">
+      {Object.values(GAMES).map((g, i) => (
+        <li key={g.id}>
+          <button className="game-card" style={scatter[i] as React.CSSProperties} onClick={() => onPick(g.id)}>
+            <span className="name">{g.name}</span>
+            <span className="blurb">{g.blurb}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 

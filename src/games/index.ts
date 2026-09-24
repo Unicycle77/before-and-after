@@ -12,6 +12,8 @@ import { photos } from "./photos";
 export interface Game {
   id: GameId;
   name: string;
+  /** One line on the game picker's card saying what players do. */
+  blurb: string;
   /** The lobby's title while this game is on. */
   heading: ReactNode;
   /** Where picking a player (in the lobby or on the host phone) starts. */
@@ -31,7 +33,8 @@ export interface Game {
   HostLobby: ComponentType<{ code: string; session: Session; display: Display }>;
 }
 
-export const GAMES: Record<GameId, Game> = { beforeAfter, photos };
+/** In the order the game picker shows them. */
+export const GAMES: Record<GameId, Game> = { photos, beforeAfter };
 
 /** The game being played; undefined on the game selection screen. */
 export const activeGame = (session: Session): Game | undefined => {
