@@ -1,42 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Jukebox } from "./Jukebox";
+import { HOSTED_KEY, RecentList, loadRecent, saveRecent, withRecent, withoutRecent } from "./recent";
 import { Screen, screenState } from "./Screen";
 import { JoinError, checkResume, createSession, ensureSignedIn, migrateLegacySession, resumeSession, store, useSession, useUid, watchHost } from "./session";
 
 const KEY = "ba.hostCode";
-const RECENT_KEY = "ba.recentSessions";
-const MAX_RECENT = 6;
-
-/** Sessions this screen has hosted, newest first (kept in localStorage). */
-interface Recent { code: string; at: number }
-
-function loadRecent(): Recent[] {
-  try {
-    const list: unknown = JSON.parse(store.get(RECENT_KEY) || "[]");
-    return Array.isArray(list) ? list.filter((r): r is Recent => typeof r?.code === "string" && typeof r?.at === "number") : [];
-  } catch { return []; }
-}
-
-function saveRecent(list: Recent[]): Recent[] {
-  store.set(RECENT_KEY, list.length ? JSON.stringify(list) : "");
-  return list;
-}
-
-const agoFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-function ago(at: number): string {
-  const mins = Math.round((at - Date.now()) / 60000);
-  if (mins > -60) return agoFormat.format(mins, "minute");
-  const hours = Math.round(mins / 60);
-  if (hours > -24) return agoFormat.format(hours, "hour");
-  return agoFormat.format(Math.round(hours / 24), "day");
-}
-
 export function MainScreen() {
   const [code, setCode] = useState(() => store.get(KEY));
   const [error, setError] = useState<string>();
   const [resumeCode, setResumeCode] = useState("");
   const [busy, setBusy] = useState(false);
-  const [recent, setRecent] = useState(loadRecent);
+  const [recent, setRecent] = useState(() => loadRecent(HOSTED_KEY));
   /** A session another screen has (or had): take it over, or show it here as an extra screen? */
   const [choice, setChoice] = useState<string>();
   /** The session another screen just took over from this one. */
@@ -55,8 +29,8 @@ export function MainScreen() {
   const session = useSession(code || undefined);
   const remembered = useRef("");
 
-  const remember = (c: string) => setRecent((r) => saveRecent([{ code: c, at: Date.now() }, ...r.filter((x) => x.code !== c)].slice(0, MAX_RECENT)));
-  const forget = (c: string) => setRecent((r) => saveRecent(r.filter((x) => x.code !== c)));
+  const remember = (c: string) => setRecent((r) => saveRecent(HOSTED_KEY, withRecent(r, c)));
+  const forget = (c: string) => setRecent((r) => saveRecent(HOSTED_KEY, withoutRecent(r, c)));
 
   // Resume a stored session on refresh; drop it if it's gone or another screen has taken it over.
   useEffect(() => {
@@ -149,21 +123,7 @@ export function MainScreen() {
           </label>
           <button type="submit" disabled={busy || resumeCode.length !== 4}>{busy ? "Checking…" : "Resume"}</button>
         </form>
-        {recent.length > 0 && (
-          <section className="recent">
-            <h2 className="muted small">Recent sessions</h2>
-            <ul>
-              {recent.map((r) => (
-                <li key={r.code}>
-                  <button disabled={busy} onClick={() => void resume(r.code, r.code)}>
-                    <span className="recent-code">{r.code}</span>
-                    <span className="muted small">{ago(r.at)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        <RecentList recent={recent} busy={busy} onPick={(c) => void resume(c, c)} />
         {lost && (
           <p className="error">
             Session {lost} was resumed on another screen.{" "}

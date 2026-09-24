@@ -262,6 +262,8 @@ input::placeholder { color: #8b7a63; }
 .join, .phone { max-width: 480px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; align-content: start; }
 .join { padding-top: 2.5rem; text-align: center; }
 .join h1 { font-size: 2.4rem; }
+.join.watch h1 { font-size: 2rem; }
+.nowrap { white-space: nowrap; }
 .join form { display: grid; gap: 1rem; text-align: left; }
 label { display: grid; gap: 0.3rem; color: var(--muted); }
 .phone > header { font-family: var(--typewriter); font-size: 1.3rem; color: var(--gold-bright); }

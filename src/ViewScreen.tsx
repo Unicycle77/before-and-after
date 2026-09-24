@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HOSTED_KEY, RecentList, WATCHED_KEY, loadRecent, mergeRecent, saveRecent, withRecent, withoutRecent } from "./recent";
 import { Screen } from "./Screen";
 import { store, useSession } from "./session";
 
@@ -20,6 +21,16 @@ export function ViewScreen() {
   const [started, setStarted] = useState(() => navigator.userActivation?.hasBeenActive ?? false);
 
   const leave = () => { store.set(KEY, ""); setCode(""); };
+
+  useEffect(() => { document.title = "Taskmaster - Watch Party"; }, []);
+
+  // Remember sessions this screen has shown, for its recent list; forget ones that no longer exist.
+  const exists = session === undefined ? undefined : session !== null;
+  useEffect(() => {
+    if (!code || exists === undefined) return;
+    const watched = loadRecent(WATCHED_KEY);
+    saveRecent(WATCHED_KEY, exists ? withRecent(watched, code) : withoutRecent(watched, code));
+  }, [code, exists]);
 
   useEffect(() => {
     if (code) {
@@ -52,9 +63,11 @@ export function ViewScreen() {
 
 function Connect({ error, onConnect }: { error?: string; onConnect: (code: string) => void }) {
   const [code, setCode] = useState("");
+  // Sessions this device has watched or hosted.
+  const [recent] = useState(() => mergeRecent(loadRecent(WATCHED_KEY), loadRecent(HOSTED_KEY)));
   return (
-    <main className="join">
-      <h1>Extra screen</h1>
+    <main className="join watch">
+      <h1>Taskmaster - <span className="nowrap">Watch Party</span></h1>
       <form onSubmit={(e) => { e.preventDefault(); onConnect(code); }}>
         <label>Game code (from the main screen)
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 4))}
@@ -64,6 +77,7 @@ function Connect({ error, onConnect }: { error?: string; onConnect: (code: strin
         {error && <p className="error">{error}</p>}
         <p className="muted small">This screen shows whatever the main screen shows, with sound. The host runs it from their phone as usual.</p>
       </form>
+      <RecentList recent={recent} busy={false} onPick={onConnect} />
     </main>
   );
 }
