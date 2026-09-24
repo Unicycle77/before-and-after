@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Jukebox } from "./Jukebox";
 import { Screen, screenState } from "./Screen";
-import { JoinError, createSession, ensureSignedIn, migrateLegacySession, resumeSession, store, useSession } from "./session";
+import { JoinError, checkResume, createSession, ensureSignedIn, migrateLegacySession, resumeSession, store, useSession } from "./session";
 
 const KEY = "ba.hostCode";
 const RECENT_KEY = "ba.recentSessions";
@@ -37,6 +37,10 @@ export function MainScreen() {
   const [resumeCode, setResumeCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [recent, setRecent] = useState(loadRecent);
+  /** A session another screen has (or had): take it over, or show it here as an extra screen? */
+  const [choice, setChoice] = useState<string>();
+  /** The session another screen just took over from this one. */
+  const [lost, setLost] = useState<string>();
   const session = useSession(code || undefined);
   const remembered = useRef("");
 
@@ -48,7 +52,7 @@ export function MainScreen() {
     if (!code || session === undefined) return;
     void ensureSignedIn().then((u) => {
       if (session === null || session.hostUid !== u.uid) {
-        if (session) setError(`Session ${code} was resumed on another screen.`);
+        if (session) setLost(code);
         else forget(code);
         store.set(KEY, "");
         setCode("");
@@ -63,8 +67,16 @@ export function MainScreen() {
     });
   }, [code, session]);
 
+  function fail(e: unknown, recentCode?: string) {
+    // A recent session that has since been deleted: drop it from the list.
+    if (recentCode && e instanceof JoinError) forget(recentCode);
+    setError(e instanceof JoinError ? e.message : e instanceof Error ? e.message : String(e));
+  }
+
   async function open(get: () => Promise<string>, recentCode?: string) {
     setError(undefined);
+    setLost(undefined);
+    setChoice(undefined);
     setBusy(true);
     try {
       const c = await get();
@@ -72,10 +84,39 @@ export function MainScreen() {
       setCode(c);
       setResumeCode("");
     } catch (e) {
-      // A recent session that has since been deleted: drop it from the list.
-      if (recentCode && e instanceof JoinError) forget(recentCode);
-      setError(e instanceof JoinError ? e.message : e instanceof Error ? e.message : String(e));
+      fail(e, recentCode);
     } finally { setBusy(false); }
+  }
+
+  /** Resuming a session this screen doesn't already own asks first, since taking it over sends the other screen back. */
+  async function resume(raw: string, recentCode?: string) {
+    setError(undefined);
+    setBusy(true);
+    try {
+      const { code: c, elsewhere } = await checkResume(raw);
+      if (elsewhere) { setChoice(c); return; }
+    } catch (e) {
+      fail(e, recentCode);
+      return;
+    } finally { setBusy(false); }
+    await open(() => resumeSession(raw), recentCode);
+  }
+
+  const showHere = (c: string) => location.assign(`/screen?code=${c}`);
+
+  if (!code && choice) {
+    return (
+      <main className="center">
+        <h1>Taskmaster</h1>
+        <p>Session <strong className="recent-code">{choice}</strong> was last open on another screen.</p>
+        <button className="big" disabled={busy} onClick={() => void open(() => resumeSession(choice))}>Take over here</button>
+        <p className="muted small">This becomes the main screen, with the music. The other screen goes back to the start.</p>
+        <button disabled={busy} onClick={() => showHere(choice)}>📺 Show it here too</button>
+        <p className="muted small">An extra screen: shows the same thing, with sound, but controls nothing.</p>
+        <button className="link" onClick={() => setChoice(undefined)}>Cancel</button>
+        {error && <p className="error">{error}</p>}
+      </main>
+    );
   }
 
   if (!code) {
@@ -83,7 +124,7 @@ export function MainScreen() {
       <main className="center">
         <h1>Taskmaster</h1>
         <button className="big" disabled={busy} onClick={() => void open(createSession)}>Start a session</button>
-        <form className="resume" onSubmit={(e) => { e.preventDefault(); void open(() => resumeSession(resumeCode)); }}>
+        <form className="resume" onSubmit={(e) => { e.preventDefault(); void resume(resumeCode); }}>
           <label>Or resume a session
             <input value={resumeCode} onChange={(e) => setResumeCode(e.target.value.toUpperCase().slice(0, 4))}
               maxLength={4} autoComplete="off" placeholder="ABCD" />
@@ -96,7 +137,7 @@ export function MainScreen() {
             <ul>
               {recent.map((r) => (
                 <li key={r.code}>
-                  <button disabled={busy} onClick={() => void open(() => resumeSession(r.code), r.code)}>
+                  <button disabled={busy} onClick={() => void resume(r.code, r.code)}>
                     <span className="recent-code">{r.code}</span>
                     <span className="muted small">{ago(r.at)}</span>
                   </button>
@@ -104,6 +145,12 @@ export function MainScreen() {
               ))}
             </ul>
           </section>
+        )}
+        {lost && (
+          <p className="error">
+            Session {lost} was resumed on another screen.{" "}
+            <button className="link" onClick={() => showHere(lost)}>📺 Show it here as an extra screen</button>
+          </p>
         )}
         {error && <p className="error">{error}</p>}
       </main>

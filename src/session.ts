@@ -64,6 +64,15 @@ export class JoinError extends Error {}
  * Main screen: picks up an existing session by its code, e.g. after "End session" or on another computer.
  * Taking it over moves `hostUid` to this browser, which sends the previous screen back to its start page.
  */
+/** Main screen, before resuming: does the session exist, and was it last opened on a different screen? */
+export async function checkResume(rawCode: string): Promise<{ code: string; elsewhere: boolean }> {
+  const code = rawCode.trim().toUpperCase();
+  const user = await ensureSignedIn();
+  const hostUid = await get(ref(db(), `sessions/${code}/hostUid`));
+  if (!hostUid.exists()) throw new JoinError(`No session found for code ${code}.`);
+  return { code, elsewhere: hostUid.val() !== user.uid };
+}
+
 export async function resumeSession(rawCode: string): Promise<string> {
   const code = rawCode.trim().toUpperCase();
   const user = await ensureSignedIn();
