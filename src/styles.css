@@ -442,8 +442,10 @@ body.idle-cursor .stage { cursor: none; }
   background: #1a0f08; background-clip: padding-box;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
 }
-/* sized from the viewport (not the spot), so the frame can hug the picture */
-.box-prize img { display: block; width: min(34vw, 56vh); height: auto; max-height: 46vh; object-fit: contain; }
+/* sized from the picture's shape (--r, set on load) to the largest that fits, so the frame hugs it */
+.box-prize { opacity: 0; }
+.box-prize.ready { opacity: 1; }
+.box-prize img { display: block; width: min(34vw, calc(46vh * var(--r, 1))); height: auto; aspect-ratio: var(--r, 1); }
 .box-result {
   position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%) rotate(-3deg);
   padding: 0.1rem 1rem;
@@ -472,7 +474,7 @@ body.idle-cursor .stage { cursor: none; }
 
 /* [BLANK] in a Box on phones: the box art has no frame of its own; a peeked-at object gets the preview border */
 .slot img.box-art { border: 0; background: none; max-height: 34vh; }
-.slot img.box-peek { max-height: 34vh; }
+.slot img.box-peek { width: auto; max-width: 100%; height: auto; max-height: 34vh; justify-self: center; background: none; }
 .box-setup { display: grid; gap: 0.6rem; }
 .box-setup p { margin: 0; }
 .box-object { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }

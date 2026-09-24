@@ -65,10 +65,16 @@ function Round({ code, round, nameOf, viewOnly }: { code: string; round: BoxRoun
 
 /** A box: closed, or opened to show what was inside (the object, or nothing). */
 function BoxFace({ revealed, objectName, objectUrl }: { revealed?: "object" | "empty"; objectName: string; objectUrl?: string }) {
+  // The frame hugs the picture: it's sized from the picture's shape, known once it loads.
+  const [ratio, setRatio] = useState<number>();
   if (revealed === "object") {
     return (
       <div className="box-reveal">
-        <div className="box-prize"><img src={objectUrl} alt={objectName} /></div>
+        <div className={ratio ? "box-prize ready" : "box-prize"} style={ratio ? ({ "--r": ratio } as React.CSSProperties) : undefined}>
+          <img src={objectUrl} alt={objectName}
+            onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || 1)}
+            onError={() => setRatio(1)} />
+        </div>
         <div className="box-result">{objectName}!</div>
       </div>
     );
