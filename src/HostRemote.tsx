@@ -51,13 +51,13 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   // Session-wide settings for the main screen, under the games on every view.
   const settings = (
     <details className="fold" {...settingsFold}>
-      <summary><h2>Settings</h2></summary>
+      <summary><h2>Settings (main screen)</h2></summary>
       <div className="steps">
         <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
-          {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
+          {session.hideBlurbs ? "Show" : "Hide"} game descriptions
         </button>
         <button onClick={() => void setShowDownload(code, !session.showDownload)}>
-          {session.showDownload ? "Hide" : "Show"} download button on the main screen
+          {session.showDownload ? "Hide" : "Show"} download button
         </button>
       </div>
     </details>
