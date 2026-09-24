@@ -156,8 +156,8 @@ export const setUnlocked = (code: string, game: GameId, uid: string, unlocked: b
 export const activeGameId = (session: Session): GameId | undefined => session.game;
 
 /**
- * Host: starts a game (players' phones switch to it, the main screen shows its lobby), or with `null`
- * leaves it for the game selection screen. Games are never switched directly, only via that screen.
+ * Host: starts or switches to a game (players' phones switch to it, the main screen shows its lobby),
+ * or with `null` goes back to the game selection screen. Nothing submitted to any game is lost.
  */
 export const setGame = (code: string, game: GameId | null) =>
   update(ref(db(), `sessions/${code}`), { game, display: { step: "list" } });

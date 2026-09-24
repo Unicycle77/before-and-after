@@ -2,7 +2,7 @@
 
 Live at **https://tm-party-games.web.app** (the old `before-and-after-6a096.web.app` address redirects there).
 
-Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players. Every session starts on a game selection screen; the host picks a game there (host phone or main screen) and goes back to it with "← Games" to pick another; games are never switched directly. Players' phones always show the active game (or wait while one is picked):
+Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players. Every session starts on a game selection screen, where the host picks a game (host phone or main screen). The host phone can then switch straight to another game from the (foldable) game section at the top; "← Games" goes back to the selection screen. Players' phones always show the active game (or wait while one is picked):
 
 - **Before & After**: each player records a **video**; its first and last frames become their **before** and **after**. The host (not a player) drives the main screen from their phone at `/host` using the same code: before → after → (pause to discuss) → video.
 - **Photos**: each player submits one **photo**. The host shows them one at a time (Previous / Next) or everyone at once.

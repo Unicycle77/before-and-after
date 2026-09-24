@@ -1,5 +1,5 @@
-import { GAMES, activeGame } from "./games";
 import { useState } from "react";
+import { GAMES, activeGame } from "./games";
 import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setUnlocked, store } from "./session";
 import type { Session } from "./types";
 
@@ -7,7 +7,7 @@ const GAMES_OPEN_KEY = "ba.hostGamesOpen";
 
 /**
  * The host's phone: pick a game, then a player, then the game's controls choose what the main screen shows.
- * Leaving a game goes back to picking one; games are never switched directly.
+ * The game section stays at the top of every view, so the host can switch games directly (or go back to picking one).
  */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const game = activeGame(session);
@@ -20,6 +20,19 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   const remove = (uid: string, name: string) => {
     if (confirm(`Remove ${name} and everything they submitted? They can then rejoin fresh.`)) void removePlayer(code, uid);
   };
+  // Always first, so it keeps its place on every view. Inside a game its heading names the game.
+  const gamePicker = (
+    <details className="fold" open={gamesOpen}
+      onToggle={(e) => { const open = e.currentTarget.open; setGamesOpen(open); store.set(GAMES_OPEN_KEY, open ? "" : "no"); }}>
+      <summary><h2>{game ? `Game: ${game.name}` : "Pick a game"}</h2></summary>
+      <div className="steps">
+        {Object.values(GAMES).map((g) => (
+          <button key={g.id} className={g.id === game?.id ? "step active" : "step"}
+            onClick={() => { if (g.id !== game?.id) void setGame(code, g.id); }}>{g.name}</button>
+        ))}
+      </div>
+    </details>
+  );
   const downloadToggle = (
     <button onClick={() => void setShowDownload(code, !session.showDownload)}>
       {session.showDownload ? "Hide" : "Show"} download button on the main screen
@@ -29,15 +42,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   if (!game) {
     return (
       <section className="remote">
-        <details className="fold" open={gamesOpen}
-          onToggle={(e) => { const open = e.currentTarget.open; setGamesOpen(open); store.set(GAMES_OPEN_KEY, open ? "" : "no"); }}>
-          <summary><h2>Pick a game</h2></summary>
-          <div className="steps">
-            {Object.values(GAMES).map((g) => (
-              <button key={g.id} className="step" onClick={() => void setGame(code, g.id)}>{g.name}</button>
-            ))}
-          </div>
-        </details>
+        {gamePicker}
         <h2>Players ({players.length})</h2>
         {players.length === 0 && <p className="muted">No players yet.</p>}
         <ul className="picker">
@@ -59,6 +64,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   if (display.step !== "list" && display.uid && current) {
     return (
       <section className="remote">
+        {gamePicker}
         <h2>{current.name}</h2>
         <game.HostPlayer code={code} session={session} display={display} uid={display.uid} />
         <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
@@ -68,7 +74,8 @@ export function HostRemote({ code, session }: { code: string; session: Session }
 
   return (
     <section className="remote">
-      <h2>{game.name}: pick a player</h2>
+      {gamePicker}
+      <h2>Pick a player</h2>
       <game.HostLobby code={code} session={session} display={display} />
       {players.length === 0 && <p className="muted">No players yet.</p>}
       <ul className="picker">
