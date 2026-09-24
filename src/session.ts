@@ -64,6 +64,10 @@ export class JoinError extends Error {}
  * Main screen: picks up an existing session by its code, e.g. after "End session" or on another computer.
  * Taking it over moves `hostUid` to this browser, which sends the previous screen back to its start page.
  */
+/** Follows which screen owns a session (its hostUid; null once the session is gone). Returns an unsubscribe. */
+export const watchHost = (code: string, onChange: (hostUid: string | null) => void) =>
+  onValue(ref(db(), `sessions/${code}/hostUid`), (s) => onChange(s.exists() ? (s.val() as string) : null));
+
 /** Main screen, before resuming: does the session exist, and was it last opened on a different screen? */
 export async function checkResume(rawCode: string): Promise<{ code: string; elsewhere: boolean }> {
   const code = rawCode.trim().toUpperCase();

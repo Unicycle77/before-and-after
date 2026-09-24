@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Jukebox } from "./Jukebox";
 import { Screen, screenState } from "./Screen";
-import { JoinError, checkResume, createSession, ensureSignedIn, migrateLegacySession, resumeSession, store, useSession } from "./session";
+import { JoinError, checkResume, createSession, ensureSignedIn, migrateLegacySession, resumeSession, store, useSession, useUid, watchHost } from "./session";
 
 const KEY = "ba.hostCode";
 const RECENT_KEY = "ba.recentSessions";
@@ -41,6 +41,17 @@ export function MainScreen() {
   const [choice, setChoice] = useState<string>();
   /** The session another screen just took over from this one. */
   const [lost, setLost] = useState<string>();
+  // On the start page, sign in and follow who owns each recent session straight away: this warms up the
+  // connection, and tapping a recent session can then answer instantly instead of looking it up first.
+  const uid = useUid();
+  const [owners, setOwners] = useState<Record<string, string | null>>({});
+  const recentCodes = recent.map((r) => r.code).join(",");
+  useEffect(() => {
+    if (code) return;
+    const unsubs = recentCodes.split(",").filter(Boolean)
+      .map((c) => watchHost(c, (owner) => setOwners((o) => ({ ...o, [c]: owner }))));
+    return () => unsubs.forEach((u) => u());
+  }, [code, recentCodes]);
   const session = useSession(code || undefined);
   const remembered = useRef("");
 
@@ -91,6 +102,13 @@ export function MainScreen() {
   /** Resuming a session this screen doesn't already own asks first, since taking it over sends the other screen back. */
   async function resume(raw: string, recentCode?: string) {
     setError(undefined);
+    const known = owners[raw.trim().toUpperCase()];
+    if (uid && known !== undefined) {
+      if (known === null) { fail(new JoinError(`No session found for code ${raw.trim().toUpperCase()}.`), recentCode); return; }
+      if (known !== uid) { setChoice(raw.trim().toUpperCase()); return; }
+      await open(() => resumeSession(raw), recentCode);
+      return;
+    }
     setBusy(true);
     try {
       const { code: c, elsewhere } = await checkResume(raw);
@@ -129,7 +147,7 @@ export function MainScreen() {
             <input value={resumeCode} onChange={(e) => setResumeCode(e.target.value.toUpperCase().slice(0, 4))}
               maxLength={4} autoComplete="off" placeholder="ABCD" />
           </label>
-          <button type="submit" disabled={busy || resumeCode.length !== 4}>Resume</button>
+          <button type="submit" disabled={busy || resumeCode.length !== 4}>{busy ? "Checking…" : "Resume"}</button>
         </form>
         {recent.length > 0 && (
           <section className="recent">
