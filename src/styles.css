@@ -115,6 +115,7 @@ input::placeholder { color: #8b7a63; }
 .qrs figure { margin: 0; display: grid; gap: 0.4rem; justify-items: center; }
 .qrs figcaption { font-family: var(--typewriter); color: var(--gold-bright); letter-spacing: 0.05em; }
 .host-qr svg { border-color: var(--paper); }
+.game-picks { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .tiles, .picker { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
 .tiles { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; padding-top: 0.5rem; }
 

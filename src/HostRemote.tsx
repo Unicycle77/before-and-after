@@ -2,28 +2,52 @@ import { GAMES, activeGame } from "./games";
 import { removePlayer, setDisplay, setGame, setShowDownload, setUnlocked } from "./session";
 import type { Session } from "./types";
 
-/** The host's phone: pick a player, then the active game's controls choose what the main screen shows. */
+/**
+ * The host's phone: pick a game, then a player, then the game's controls choose what the main screen shows.
+ * Leaving a game goes back to picking one; games are never switched directly.
+ */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const game = activeGame(session);
   const players = Object.entries(session.players ?? {});
   const display = session.display ?? { step: "list" as const };
   const current = display.uid ? session.players?.[display.uid] : undefined;
 
-  // Always at the top, so it keeps its place on every view.
-  const switcher = (
-    <div className="steps two">
-      {Object.values(GAMES).map((g) => (
-        <button key={g.id} className={g.id === game.id ? "step active" : "step"} onClick={() => { if (g.id !== game.id) void setGame(code, g.id); }}>
-          {g.name}
-        </button>
-      ))}
-    </div>
+  const remove = (uid: string, name: string) => {
+    if (confirm(`Remove ${name} and everything they submitted? They can then rejoin fresh.`)) void removePlayer(code, uid);
+  };
+  const downloadToggle = (
+    <button onClick={() => void setShowDownload(code, !session.showDownload)}>
+      {session.showDownload ? "Hide" : "Show"} download button on the main screen
+    </button>
   );
+
+  if (!game) {
+    return (
+      <section className="remote">
+        <h2>Pick a game</h2>
+        <div className="steps">
+          {Object.values(GAMES).map((g) => (
+            <button key={g.id} className="step" onClick={() => void setGame(code, g.id)}>{g.name}</button>
+          ))}
+        </div>
+        <h2>Players ({players.length})</h2>
+        {players.length === 0 && <p className="muted">No players yet.</p>}
+        <ul className="picker">
+          {players.map(([uid, p]) => (
+            <li key={uid}>
+              <button disabled><span>{p.name}</span></button>
+              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
+            </li>
+          ))}
+        </ul>
+        {downloadToggle}
+      </section>
+    );
+  }
 
   if (display.step !== "list" && display.uid && current) {
     return (
       <section className="remote">
-        {switcher}
         <h2>{current.name}</h2>
         <game.HostPlayer code={code} session={session} display={display} uid={display.uid} />
         <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
@@ -33,8 +57,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
 
   return (
     <section className="remote">
-      {switcher}
-      <h2>Pick a player</h2>
+      <h2>{game.name}: pick a player</h2>
       <game.HostLobby code={code} session={session} display={display} />
       {players.length === 0 && <p className="muted">No players yet.</p>}
       <ul className="picker">
@@ -54,14 +77,13 @@ export function HostRemote({ code, session }: { code: string; session: Session }
                 <button className="lock" aria-label={unlocked ? `Lock ${p.name}'s submission` : `Let ${p.name} resubmit`}
                   onClick={() => void setUnlocked(code, game.id, uid, !unlocked)}>{unlocked ? "🔓" : "🔒"}</button>
               )}
-              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => { if (confirm(`Remove ${p.name} and everything they submitted? They can then rejoin fresh.`)) void removePlayer(code, uid); }}>×</button>
+              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
             </li>
           );
         })}
       </ul>
-      <button onClick={() => void setShowDownload(code, !session.showDownload)}>
-        {session.showDownload ? "Hide" : "Show"} download button on the main screen
-      </button>
+      {downloadToggle}
+      <button className="link" onClick={() => void setGame(code, null)}>← Games</button>
     </section>
   );
 }

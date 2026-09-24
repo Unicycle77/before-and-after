@@ -1,6 +1,6 @@
 # Before & After
 
-Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players; the host switches between them (host phone: top of the Screen tab; main screen: "Switch to…" in the lobby), and players' phones always show the active one:
+Players join with a 4-letter code (or QR) on their phone. A session has two games that share the same players. Every session starts on a game selection screen; the host picks a game there (host phone or main screen) and goes back to it with "← Games" to pick another; games are never switched directly. Players' phones always show the active game (or wait while one is picked):
 
 - **Before & After**: each player records a **video**; its first and last frames become their **before** and **after**. The host (not a player) drives the main screen from their phone at `/host` using the same code: before → after → (pause to discuss) → video.
 - **Photos**: each player submits one **photo**. The host shows them one at a time (Previous / Next) or everyone at once.

@@ -27,7 +27,12 @@ export function Play() {
   return (
     <main className="phone">
       <header><strong>{session.players[uid]!.name}</strong><span className="muted"> · {code}</span></header>
-      <game.Player key={game.id} code={code} uid={uid} session={session} />
+      {game ? <game.Player key={game.id} code={code} uid={uid} session={session} /> : (
+        <section className="slot">
+          <h2>You're in!</h2>
+          <p className="slot-hint">Waiting for the host to pick a game…</p>
+        </section>
+      )}
       <button className="link" onClick={() => { void leaveSession(code, uid); leave(); }}>Leave session</button>
     </main>
   );

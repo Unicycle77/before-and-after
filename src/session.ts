@@ -152,11 +152,14 @@ export const setUnlocked = (code: string, game: GameId, uid: string, unlocked: b
   return unlocked ? set(r, true) : remove(r);
 };
 
-/** The game players see and the main screen shows (sessions from before there were games play Before & After). */
-export const activeGameId = (session: Session): GameId => session.game ?? "beforeAfter";
+/** The game players see and the main screen shows; undefined on the game selection screen. */
+export const activeGameId = (session: Session): GameId | undefined => session.game;
 
-/** Host: makes another game the active one. Players' phones switch to it and the main screen goes back to the lobby. */
-export const setGame = (code: string, game: GameId) =>
+/**
+ * Host: starts a game (players' phones switch to it, the main screen shows its lobby), or with `null`
+ * leaves it for the game selection screen. Games are never switched directly, only via that screen.
+ */
+export const setGame = (code: string, game: GameId | null) =>
   update(ref(db(), `sessions/${code}`), { game, display: { step: "list" } });
 
 /**
@@ -165,7 +168,8 @@ export const setGame = (code: string, game: GameId) =>
  */
 export async function migrateLegacySession(code: string, session: Session): Promise<void> {
   if (!session.media && !session.unlocked) return;
-  const patch: Record<string, BeforeAfterMedia | boolean | null> = { media: null, unlocked: null };
+  // They were playing Before & After, so carry on with it rather than landing on the game selection screen.
+  const patch: Record<string, BeforeAfterMedia | boolean | string | null> = { media: null, unlocked: null, game: "beforeAfter" };
   for (const [uid, m] of Object.entries(session.media ?? {})) patch[`games/beforeAfter/media/${uid}`] = m;
   for (const [uid, u] of Object.entries(session.unlocked ?? {})) patch[`games/beforeAfter/unlocked/${uid}`] = u;
   await update(ref(db(), `sessions/${code}`), patch);

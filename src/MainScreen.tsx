@@ -50,7 +50,7 @@ export function MainScreen() {
   const forget = (c: string) => setRecent((r) => saveRecent(r.filter((x) => x.code !== c)));
 
   // Warm the browser cache with every photo submitted to the active game so reveals appear instantly.
-  const photoUrls = session ? activeGame(session).photoUrls(session).join("\n") : "";
+  const photoUrls = (session && activeGame(session)?.photoUrls(session).join("\n")) || "";
   useEffect(() => {
     preloadImages(photoUrls.split("\n"));
   }, [photoUrls]);
@@ -128,10 +128,10 @@ export function MainScreen() {
   const display = session.display ?? { step: "list" as const };
   const videoPlaying = display.step === "video" && display.playing !== false;
   // A step without a player shows everyone; one with a player needs them to still be here and to have sent something.
-  const onStage = display.step !== "list"
+  const onStage = !!game && display.step !== "list"
     && (!display.uid || (!!session.players?.[display.uid] && game.status(session, display.uid) !== "waiting"));
 
-  if (onStage) {
+  if (game && onStage) {
     return (
       <>
         <game.Stage code={code} session={session} display={display} />
@@ -145,7 +145,7 @@ export function MainScreen() {
     <main className="lobby">
       <header>
         <div>
-          <h1>{game.heading}</h1>
+          <h1>{game ? game.heading : <>Before <span className="amp">&amp;</span> After</>}</h1>
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>
@@ -163,29 +163,35 @@ export function MainScreen() {
         </div>
       </header>
 
+      {!game && (
+        <>
+          <h2>Pick a game</h2>
+          <div className="game-picks">
+            {Object.values(GAMES).map((g) => (
+              <button key={g.id} className="big" onClick={() => void setGame(code, g.id)}>{g.name}</button>
+            ))}
+          </div>
+        </>
+      )}
+
       <h2>
         Players ({players.length})
-        {players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => game.status(session, uid) === "submitted").length} submitted</span>}
+        {game && players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => game.status(session, uid) === "submitted").length} submitted</span>}
       </h2>
       {players.length === 0 && <p className="muted">Waiting for players to join…</p>}
       <ul className="tiles">
         {players.map(([uid, p]) => (
-          <Tile key={uid} player={p} status={game.status(session, uid)}
-            onPick={() => void setDisplay(code, { uid, step: game.firstStep })} />
+          <Tile key={uid} player={p} status={game?.status(session, uid)}
+            onPick={() => { if (game) void setDisplay(code, { uid, step: game.firstStep }); }} />
         ))}
       </ul>
       <p className="muted small">
         {session.controllerUid
           ? <>🎮 Host remote connected. <button className="link" onClick={() => void resetController(code)}>Reset</button></>
           : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
-        {" "}You can also click a player here.
+        {" "}{game ? "You can also click a player here." : "You can also pick a game here."}
       </p>
-      <p className="muted small">
-        Switch to{" "}
-        {Object.values(GAMES).filter((g) => g.id !== game.id).map((g) => (
-          <button key={g.id} className="link" onClick={() => void setGame(code, g.id)}>{g.name}</button>
-        ))}
-      </p>
+      {game && <button className="link" onClick={() => void setGame(code, null)}>← Games</button>}
       {session.showDownload && <DownloadZip code={code} session={session} />}
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
     </main>
@@ -194,13 +200,14 @@ export function MainScreen() {
   );
 }
 
-function Tile({ player, status, onPick }: { player: Player; status: SubmissionStatus; onPick: () => void }) {
+/** A player in the lobby; on the game selection screen (no status) it's just their name. */
+function Tile({ player, status, onPick }: { player: Player; status?: SubmissionStatus; onPick: () => void }) {
   return (
     <li>
       <button className="tile" disabled={status !== "submitted"} onClick={onPick}>
         <span className="name">{player.name}</span>
         {status === "submitted" ? <span className="stamp">✓ Submitted</span>
-          : <span className="status">… {status === "sending" ? "sending" : "waiting"}</span>}
+          : status && <span className="status">… {status === "sending" ? "sending" : "waiting"}</span>}
       </button>
     </li>
   );

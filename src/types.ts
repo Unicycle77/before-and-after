@@ -50,7 +50,7 @@ export interface Session {
   /** The host's phone (claimed via /host). Only it (and the main screen) can drive the display. */
   controllerUid?: string;
   players?: Record<string, Player>;
-  /** The game players see and the main screen shows. Absent in sessions from before there were games: Before & After. */
+  /** The game players see and the main screen shows. Absent = the game selection screen (where every session starts). */
   game?: GameId;
   games?: { beforeAfter?: GameData<BeforeAfterMedia>; photos?: GameData<PhotosMedia> };
   display?: Display;

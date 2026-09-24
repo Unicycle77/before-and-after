@@ -33,4 +33,8 @@ export interface Game {
 
 export const GAMES: Record<GameId, Game> = { beforeAfter, photos };
 
-export const activeGame = (session: Session): Game => GAMES[activeGameId(session)];
+/** The game being played; undefined on the game selection screen. */
+export const activeGame = (session: Session): Game | undefined => {
+  const id = activeGameId(session);
+  return id && GAMES[id];
+};
