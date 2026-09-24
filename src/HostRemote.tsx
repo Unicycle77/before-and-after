@@ -1,9 +1,10 @@
 import { GAMES, activeGame } from "./games";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setUnlocked, store } from "./session";
 import type { Session } from "./types";
 
-const GAMES_OPEN_KEY = "ba.hostGamesOpen";
+const OPEN_KEY = "ba.hostOpenSection";
+type Section = "games" | "players";
 
 /**
  * The host's phone: pick a game, then a player, then the game's controls choose what the main screen shows.
@@ -11,8 +12,18 @@ const GAMES_OPEN_KEY = "ba.hostGamesOpen";
  */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const game = activeGame(session);
-  // The game list can be folded away to leave room for the players; this phone remembers which.
-  const [gamesOpen, setGamesOpen] = useState(() => store.get(GAMES_OPEN_KEY) !== "no");
+  // On the game selection view, "Pick a game" and "Players" fold like an accordion: at most one is open.
+  // This phone remembers which ("none" = both folded).
+  const [openSection, setOpenSection] = useState<Section | undefined>(() => {
+    const saved = store.get(OPEN_KEY);
+    return saved === "none" ? undefined : saved === "players" ? "players" : "games";
+  });
+  useEffect(() => { store.set(OPEN_KEY, openSection ?? "none"); }, [openSection]);
+  // Also fires when the other section is closed for us; only the section's own state matters.
+  const onToggle = (section: Section) => (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+    const open = e.currentTarget.open;
+    setOpenSection((s) => (open ? section : s === section ? undefined : s));
+  };
   const players = Object.entries(session.players ?? {});
   const display = session.display ?? { step: "list" as const };
   const current = display.uid ? session.players?.[display.uid] : undefined;
@@ -29,8 +40,7 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   if (!game) {
     return (
       <section className="remote">
-        <details className="fold" open={gamesOpen}
-          onToggle={(e) => { const open = e.currentTarget.open; setGamesOpen(open); store.set(GAMES_OPEN_KEY, open ? "" : "no"); }}>
+        <details className="fold" open={openSection === "games"} onToggle={onToggle("games")}>
           <summary><h2>Pick a game</h2></summary>
           <div className="steps">
             {Object.values(GAMES).map((g) => (
@@ -38,16 +48,18 @@ export function HostRemote({ code, session }: { code: string; session: Session }
             ))}
           </div>
         </details>
-        <h2>Players ({players.length})</h2>
-        {players.length === 0 && <p className="muted">No players yet.</p>}
-        <ul className="picker">
-          {players.map(([uid, p]) => (
-            <li key={uid}>
-              <button disabled><span>{p.name}</span></button>
-              <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
-            </li>
-          ))}
-        </ul>
+        <details className="fold" open={openSection === "players"} onToggle={onToggle("players")}>
+          <summary><h2>Players ({players.length})</h2></summary>
+          {players.length === 0 && <p className="muted">No players yet.</p>}
+          <ul className="picker">
+            {players.map(([uid, p]) => (
+              <li key={uid}>
+                <button disabled><span>{p.name}</span></button>
+                <button className="x" aria-label={`Remove ${p.name}`} onClick={() => remove(uid, p.name)}>×</button>
+              </li>
+            ))}
+          </ul>
+        </details>
         <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
           {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
         </button>
