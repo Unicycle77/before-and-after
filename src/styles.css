@@ -83,6 +83,11 @@ input::placeholder { color: #8b7a63; }
 .center { min-height: 100vh; display: grid; place-content: center; gap: 1rem; text-align: center; padding: 1rem; }
 .center h1 { font-size: 3rem; }
 .resume { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 0.5rem; margin-top: 1.5rem; text-align: left; }
+.recent { display: grid; gap: 0.4rem; }
+.recent h2 { margin: 0; font-weight: normal; }
+.recent ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.recent button { display: grid; gap: 0.1rem; min-width: 7rem; }
+.recent-code { font-family: var(--typewriter); font-size: 1.3rem; letter-spacing: 0.2em; }
 .resume input { font-family: var(--typewriter); letter-spacing: 0.3em; text-transform: uppercase; }
 .row { display: flex; gap: 0.5rem; }
 .row > * { flex: 1; }
