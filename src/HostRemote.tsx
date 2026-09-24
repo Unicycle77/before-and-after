@@ -39,10 +39,21 @@ export function HostRemote({ code, session }: { code: string; session: Session }
     </button>
   );
 
+  // Games on one side, players on the other: two columns on a wide screen (an iPad in landscape),
+  // one column (games first) on a phone.
+  const layout = (gameSide: React.ReactNode, playerSide: React.ReactNode) => (
+    <section className="remote split">
+      <div className="remote-col">{gamePicker}{gameSide}</div>
+      <div className="remote-col">{playerSide}</div>
+    </section>
+  );
+
   if (!game) {
-    return (
-      <section className="remote">
-        {gamePicker}
+    return layout(
+      <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
+        {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
+      </button>,
+      <>
         <h2>Players ({players.length})</h2>
         {players.length === 0 && <p className="muted">No players yet.</p>}
         <ul className="picker">
@@ -53,28 +64,25 @@ export function HostRemote({ code, session }: { code: string; session: Session }
             </li>
           ))}
         </ul>
-        <button onClick={() => void setHideBlurbs(code, !session.hideBlurbs)}>
-          {session.hideBlurbs ? "Show" : "Hide"} game descriptions on the main screen
-        </button>
         {downloadToggle}
-      </section>
+      </>,
     );
   }
 
   if (display.step !== "list" && display.uid && current) {
-    return (
-      <section className="remote">
-        {gamePicker}
+    return layout(
+      null,
+      <>
         <h2>{current.name}</h2>
         <game.HostPlayer code={code} session={session} display={display} uid={display.uid} />
         <button className="link" onClick={() => void setDisplay(code, { step: "list" })}>← Back to players</button>
-      </section>
+      </>,
     );
   }
 
-  return (
-    <section className="remote">
-      {gamePicker}
+  return layout(
+    <button className="link" onClick={() => void setGame(code, null)}>← Games</button>,
+    <>
       <h2>Players ({players.length})</h2>
       <game.HostLobby code={code} session={session} display={display} />
       {players.length === 0 && <p className="muted">No players yet.</p>}
@@ -101,7 +109,6 @@ export function HostRemote({ code, session }: { code: string; session: Session }
         })}
       </ul>
       {downloadToggle}
-      <button className="link" onClick={() => void setGame(code, null)}>← Games</button>
-    </section>
+    </>,
   );
 }

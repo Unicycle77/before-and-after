@@ -32,7 +32,7 @@ export function HostPage() {
   if (!session || session.controllerUid !== uid) return <main className="center"><p>Connecting…</p></main>;
 
   return (
-    <main className="phone">
+    <main className="phone host">
       <header><strong>🎮 Host remote</strong><span className="muted"> · {code}</span></header>
       <nav className="tabs">
         <button className={tab === "screen" ? "active" : ""} onClick={() => setTab("screen")}>📺 Screen</button>

@@ -280,7 +280,12 @@ label { display: grid; gap: 0.3rem; color: var(--muted); }
 .slot h2 { color: var(--burgundy); margin: 0; }
 .slot img, .slot video { width: 100%; max-height: 40vh; object-fit: contain; border: 3px solid var(--gold); border-radius: 2px; background: #000; }
 progress { width: 100%; accent-color: var(--burgundy); }
-.remote { display: grid; gap: 0.75rem; }
+.remote, .remote-col { display: grid; gap: 0.75rem; align-content: start; }
+/* wide screens (an iPad in landscape): games on the left, players on the right */
+@media (min-width: 900px) {
+  .phone.host { max-width: 1100px; }
+  .remote.split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); column-gap: 2.5rem; align-items: start; }
+}
 .picker li { display: flex; gap: 0.5rem; }
 .picker li > button:first-child { flex: 1; display: flex; flex-direction: column; text-align: left; }
 .picker .x, .picker .lock { padding: 0.7rem 1rem; }
