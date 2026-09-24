@@ -1,6 +1,9 @@
 import { GAMES, activeGame } from "./games";
-import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setUnlocked } from "./session";
+import { useState } from "react";
+import { removePlayer, setDisplay, setGame, setHideBlurbs, setShowDownload, setUnlocked, store } from "./session";
 import type { Session } from "./types";
+
+const GAMES_OPEN_KEY = "ba.hostGamesOpen";
 
 /**
  * The host's phone: pick a game, then a player, then the game's controls choose what the main screen shows.
@@ -8,6 +11,8 @@ import type { Session } from "./types";
  */
 export function HostRemote({ code, session }: { code: string; session: Session }) {
   const game = activeGame(session);
+  // The game list can be folded away to leave room for the players; this phone remembers which.
+  const [gamesOpen, setGamesOpen] = useState(() => store.get(GAMES_OPEN_KEY) !== "no");
   const players = Object.entries(session.players ?? {});
   const display = session.display ?? { step: "list" as const };
   const current = display.uid ? session.players?.[display.uid] : undefined;
@@ -24,12 +29,15 @@ export function HostRemote({ code, session }: { code: string; session: Session }
   if (!game) {
     return (
       <section className="remote">
-        <h2>Pick a game</h2>
-        <div className="steps">
-          {Object.values(GAMES).map((g) => (
-            <button key={g.id} className="step" onClick={() => void setGame(code, g.id)}>{g.name}</button>
-          ))}
-        </div>
+        <details className="fold" open={gamesOpen}
+          onToggle={(e) => { const open = e.currentTarget.open; setGamesOpen(open); store.set(GAMES_OPEN_KEY, open ? "" : "no"); }}>
+          <summary><h2>Pick a game</h2></summary>
+          <div className="steps">
+            {Object.values(GAMES).map((g) => (
+              <button key={g.id} className="step" onClick={() => void setGame(code, g.id)}>{g.name}</button>
+            ))}
+          </div>
+        </details>
         <h2>Players ({players.length})</h2>
         {players.length === 0 && <p className="muted">No players yet.</p>}
         <ul className="picker">

@@ -289,6 +289,14 @@ button .muted { color: #7a6a55; }
 .steps.two { grid-template-columns: 1fr 1fr; }
 .steps button { padding: 1.1rem 0.5rem; font-size: 1.2rem; }
 
+/* a section the host can fold away: the h2 is the handle, with a gold ▸ / ▾ in front */
+.fold > summary { list-style: none; cursor: pointer; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary h2 { display: inline; }
+.fold > summary::before { content: "▸"; display: inline-block; width: 1.2em; color: var(--gold); font-family: var(--typewriter); font-size: 1.2rem; }
+.fold[open] > summary::before { content: "▾"; }
+.fold[open] > summary { margin-bottom: 0.6rem; }
+
 .download { margin-top: 2rem; display: grid; gap: 0.4rem; justify-items: start; }
 
 /* backup main-screen controls: invisible until the mouse moves */
