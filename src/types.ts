@@ -1,7 +1,12 @@
-export type MediaKind = "before" | "after" | "video";
+/** Every game a session can play. The players are shared; each game keeps its own submissions. */
+export const GAME_IDS = ["beforeAfter"] as const;
+export type GameId = (typeof GAME_IDS)[number];
 
-/** What the main screen is showing. Only host / first-player may write this. */
-/** "review" = everyone's before & after on one screen (no uid). */
+/**
+ * What the main screen is showing. Only host / first-player may write this.
+ * "list" = the lobby. The other steps belong to the active game; a step without a uid shows everyone
+ * ("review" = everyone's before & after on one screen).
+ */
 export type Step = "list" | "before" | "after" | "both" | "video" | "review";
 
 export interface Display {
@@ -18,8 +23,15 @@ export interface Player {
   joinedAt: number;
 }
 
-/** Download URLs of a player's submissions. RTDB drops empty objects, so all optional. */
-export type Media = Partial<Record<MediaKind, string>>;
+/** Download URLs of a player's Before & After submission. RTDB drops empty objects, so all optional. */
+export type BeforeAfterMedia = Partial<Record<"before" | "after" | "video", string>>;
+
+/** One game's submissions within a session. */
+export interface GameData<M> {
+  media?: Record<string, M>;
+  /** Players the host has let resubmit. Everyone else is locked once their submission is in. */
+  unlocked?: Record<string, boolean>;
+}
 
 export interface Jukebox {
   /** Song titles, published by the main screen (the files stay on that PC). */
@@ -35,11 +47,14 @@ export interface Session {
   /** The host's phone (claimed via /host). Only it (and the main screen) can drive the display. */
   controllerUid?: string;
   players?: Record<string, Player>;
-  media?: Record<string, Media>;
+  /** The game players see and the main screen shows. Absent in sessions from before there were games: Before & After. */
+  game?: GameId;
+  games?: { beforeAfter?: GameData<BeforeAfterMedia> };
   display?: Display;
   /** Host remote toggles this to reveal the download-all button on the main screen. */
   showDownload?: boolean;
-  /** Players the host has let resubmit. Everyone else is locked once their submission is in. */
-  unlocked?: Record<string, boolean>;
   jukebox?: Jukebox;
+  /** Where Before & After kept its data before there were games. Moved into `games` when a main screen opens the session. */
+  media?: Record<string, BeforeAfterMedia>;
+  unlocked?: Record<string, boolean>;
 }

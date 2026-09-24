@@ -23,17 +23,27 @@
           }
         },
 
-        "media": {
-          "$uid": {
-            ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || !(data.child('before').exists() && data.child('after').exists()) || root.child('sessions').child($code).child('unlocked').child($uid).val() === true)) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
-          }
+        "games": {
+          "beforeAfter": {
+            "media": {
+              "$uid": {
+                ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || !(data.child('before').exists() && data.child('after').exists()) || root.child('sessions').child($code).child('games').child('beforeAfter').child('unlocked').child($uid).val() === true)) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)"
+              }
+            },
+            "unlocked": {
+              "$uid": {
+                ".write": "auth != null && ((auth.uid === $uid && !newData.exists()) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+                ".validate": "newData.val() === true"
+              }
+            },
+            "$other": { ".validate": false }
+          },
+          "$other": { ".validate": false }
         },
 
-        "unlocked": {
-          "$uid": {
-            ".write": "auth != null && ((auth.uid === $uid && !newData.exists()) || root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
-            ".validate": "newData.val() === true"
-          }
+        "game": {
+          ".write": "auth != null && (root.child('sessions').child($code).child('hostUid').val() === auth.uid || root.child('sessions').child($code).child('controllerUid').val() === auth.uid)",
+          ".validate": "newData.val() === 'beforeAfter'"
         },
 
         "jukebox": {

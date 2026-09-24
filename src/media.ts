@@ -1,7 +1,7 @@
 import { ref as dbRef, update } from "firebase/database";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { db, storage } from "./firebase";
-import type { MediaKind } from "./types";
+import type { GameId } from "./types";
 
 /**
  * Downscale phone photos (often 4000px+/8MB) so uploads are quick and the TV loads them instantly.
@@ -22,11 +22,12 @@ async function shrinkImage(file: File, maxDim = 1600): Promise<Blob> {
   return file;
 }
 
-/** Uploads a file to Storage, then publishes its URL to the session. */
+/** Uploads a file to Storage, then publishes its URL as the player's `kind` in that game. */
 export async function submitMedia(
   code: string,
+  game: GameId,
   uid: string,
-  kind: MediaKind,
+  kind: string,
   file: Blob,
   onProgress: (fraction: number) => void,
   opts: { alreadySized?: boolean } = {}, // true for frames we already resized/encoded ourselves
@@ -42,5 +43,5 @@ export async function submitMedia(
     task.on("state_changed", (s) => onProgress(s.bytesTransferred / s.totalBytes), reject, resolve);
   });
   const url = await getDownloadURL(task.snapshot.ref);
-  await update(dbRef(db(), `sessions/${code}/media/${uid}`), { [kind]: url });
+  await update(dbRef(db(), `sessions/${code}/games/${game}/media/${uid}`), { [kind]: url });
 }

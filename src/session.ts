@@ -2,7 +2,7 @@ import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth"
 import { get, onValue, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
-import type { Display, Jukebox, Session } from "./types";
+import { GAME_IDS, type BeforeAfterMedia, type Display, type GameId, type Jukebox, type Session } from "./types";
 
 let signIn: Promise<User> | undefined;
 
@@ -84,10 +84,7 @@ export async function joinSession(rawCode: string, rawName: string): Promise<str
   // A brand-new player starts clean: clear anything left behind by an earlier stint or a partial removal.
   // (Someone reconnecting with their player record still in place keeps their submission.)
   if (!(await get(ref(db(), `sessions/${code}/players/${user.uid}`))).exists()) {
-    await Promise.all([
-      remove(ref(db(), `sessions/${code}/media/${user.uid}`)),
-      remove(ref(db(), `sessions/${code}/unlocked/${user.uid}`)),
-    ]);
+    await clearSubmissions(code, user.uid);
   }
   await set(ref(db(), `sessions/${code}/players/${user.uid}`), {
     name,
@@ -131,21 +128,44 @@ export function extractCode(text: string): string | null {
   return /^[A-Z0-9]{4}$/.test(t) ? t : null;
 }
 
-/** Removes a player *and* their submitted video/photos, so rejoining starts fresh. */
+/** Clears what a player has submitted in every game (and any unlocks). */
+const clearSubmissions = (code: string, uid: string) =>
+  Promise.all(GAME_IDS.flatMap((game) => [
+    remove(ref(db(), `sessions/${code}/games/${game}/media/${uid}`)),
+    remove(ref(db(), `sessions/${code}/games/${game}/unlocked/${uid}`)),
+  ]));
+
+/** Removes a player *and* everything they submitted, so rejoining starts fresh. */
 export const removePlayer = async (code: string, uid: string) => {
   await Promise.all([
     remove(ref(db(), `sessions/${code}/players/${uid}`)),
-    remove(ref(db(), `sessions/${code}/media/${uid}`)),
-    remove(ref(db(), `sessions/${code}/unlocked/${uid}`)),
+    clearSubmissions(code, uid),
   ]);
 };
 
 /**
- * Host: lets a player who has already submitted send a new video (or locks them again).
+ * Host: lets a player who has already submitted to a game send a new submission (or locks them again).
  * The player's phone clears the unlock itself once the new submission lands.
  */
-export const setUnlocked = (code: string, uid: string, unlocked: boolean) =>
-  unlocked ? set(ref(db(), `sessions/${code}/unlocked/${uid}`), true) : remove(ref(db(), `sessions/${code}/unlocked/${uid}`));
+export const setUnlocked = (code: string, game: GameId, uid: string, unlocked: boolean) => {
+  const r = ref(db(), `sessions/${code}/games/${game}/unlocked/${uid}`);
+  return unlocked ? set(r, true) : remove(r);
+};
+
+/** The game players see and the main screen shows (sessions from before there were games play Before & After). */
+export const activeGameId = (session: Session): GameId => session.game ?? "beforeAfter";
+
+/**
+ * Main screen: moves a session from before there were games into the games layout, so it can be resumed.
+ * Only the session's host can do this (it rewrites the whole session).
+ */
+export async function migrateLegacySession(code: string, session: Session): Promise<void> {
+  if (!session.media && !session.unlocked) return;
+  const patch: Record<string, BeforeAfterMedia | boolean | null> = { media: null, unlocked: null };
+  for (const [uid, m] of Object.entries(session.media ?? {})) patch[`games/beforeAfter/media/${uid}`] = m;
+  for (const [uid, u] of Object.entries(session.unlocked ?? {})) patch[`games/beforeAfter/unlocked/${uid}`] = u;
+  await update(ref(db(), `sessions/${code}`), patch);
+}
 
 /** A player leaving on their own: same as being removed. */
 export const leaveSession = removePlayer;

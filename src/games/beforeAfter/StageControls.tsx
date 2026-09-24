@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { patchDisplay, setDisplay } from "./session";
-import type { Display } from "./types";
+import { useEffect } from "react";
+import { patchDisplay, setDisplay } from "../../session";
+import { useStageBarVisible } from "../../stageBar";
+import type { Display } from "../../types";
 
 type StageStep = "before" | "after" | "both" | "video";
 const ORDER: StageStep[] = ["before", "after", "both", "video"];
@@ -15,24 +16,7 @@ const LABEL: Record<StageStep, string> = { before: "Before", after: "After", bot
 export function StageControls({ code, display, hasVideo }: { code: string; display: Display; hasVideo: boolean }) {
   const uid = display.uid;
   const step = display.step as StageStep;
-  const [visible, setVisible] = useState(false);
-
-  // Show the bar while the mouse is moving; hide it (and the cursor) after a short pause.
-  useEffect(() => {
-    let timer: number | undefined;
-    const wake = () => {
-      setVisible(true);
-      document.body.classList.remove("idle-cursor");
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => { setVisible(false); document.body.classList.add("idle-cursor"); }, 2500);
-    };
-    window.addEventListener("mousemove", wake);
-    return () => {
-      window.removeEventListener("mousemove", wake);
-      window.clearTimeout(timer);
-      document.body.classList.remove("idle-cursor");
-    };
-  }, []);
+  const visible = useStageBarVisible();
 
   const review = display.step === "review";
   const available = ORDER.filter((s) => s !== "video" || hasVideo);

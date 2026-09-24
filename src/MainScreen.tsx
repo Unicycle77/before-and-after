@@ -1,15 +1,13 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useRef, useState } from "react";
 import { DownloadZip } from "./DownloadZip";
+import { activeGame } from "./games";
 import { Jukebox } from "./Jukebox";
-import { Review } from "./Review";
-import { StageControls } from "./StageControls";
-import { submissionStatus } from "./submission";
-import { SafeImg } from "./SafeImg";
-import { playableVideoUrl, preloadImages, preloadVideo } from "./preload";
+import { preloadImages } from "./preload";
 import { PUBLIC_URL, hostUrlFor, joinUrlFor } from "./firebase";
-import { JoinError, createSession, ensureSignedIn, patchDisplay, resetController, resumeSession, setDisplay, store, useSession } from "./session";
-import type { Display, Media, Player, Step } from "./types";
+import { JoinError, createSession, ensureSignedIn, migrateLegacySession, resetController, resumeSession, setDisplay, store, useSession } from "./session";
+import type { SubmissionStatus } from "./submission";
+import type { Player } from "./types";
 
 const KEY = "ba.hostCode";
 const RECENT_KEY = "ba.recentSessions";
@@ -51,20 +49,11 @@ export function MainScreen() {
   const remember = (c: string) => setRecent((r) => saveRecent([{ code: c, at: Date.now() }, ...r.filter((x) => x.code !== c)].slice(0, MAX_RECENT)));
   const forget = (c: string) => setRecent((r) => saveRecent(r.filter((x) => x.code !== c)));
 
-  // Warm the browser cache with every submitted photo so reveals appear instantly.
-  const photoUrls = Object.values(session?.media ?? {})
-    .flatMap((m) => [m.before, m.after])
-    .filter((u): u is string => !!u)
-    .join("\n");
+  // Warm the browser cache with every photo submitted to the active game so reveals appear instantly.
+  const photoUrls = session ? activeGame(session).photoUrls(session).join("\n") : "";
   useEffect(() => {
     preloadImages(photoUrls.split("\n"));
   }, [photoUrls]);
-
-  // Once a player is picked, start fetching their video in the background: by the time the host
-  // gets to "Video" (after the before/after discussion) it plays instantly from memory.
-  const pickedUid = session?.display?.uid;
-  const pickedVideo = pickedUid ? session?.media?.[pickedUid]?.video : undefined;
-  useEffect(() => { preloadVideo(pickedVideo); }, [pickedVideo]);
 
   // Resume a stored session on refresh; drop it if it's gone or another screen has taken it over.
   useEffect(() => {
@@ -75,9 +64,13 @@ export function MainScreen() {
         else forget(code);
         store.set(KEY, "");
         setCode("");
-      } else if (remembered.current !== code) {
-        remembered.current = code;
-        remember(code);
+      } else {
+        // A session from before there were games: move its data into the games layout.
+        void migrateLegacySession(code, session);
+        if (remembered.current !== code) {
+          remembered.current = code;
+          remember(code);
+        }
       }
     });
   }, [code, session]);
@@ -130,26 +123,18 @@ export function MainScreen() {
   }
   if (!session) return <main className="center"><p>Loading…</p></main>;
 
+  const game = activeGame(session);
   const players = Object.entries(session.players ?? {});
-  const media = session.media ?? {};
   const display = session.display ?? { step: "list" as const };
-  const shown = display.uid ? session.players?.[display.uid] : undefined;
-  const shownMedia = display.uid ? media[display.uid] : undefined;
   const videoPlaying = display.step === "video" && display.playing !== false;
+  // A step without a player shows everyone; one with a player needs them to still be here and to have sent something.
+  const onStage = display.step !== "list"
+    && (!display.uid || (!!session.players?.[display.uid] && game.status(session, display.uid) !== "waiting"));
 
-  if (display.step === "review") {
+  if (onStage) {
     return (
       <>
-        <Review code={code} players={session.players ?? {}} media={media} display={display} />
-        <Jukebox code={code} jukebox={session.jukebox} duck={false} showUi={false} />
-      </>
-    );
-  }
-
-  if (display.step !== "list" && shown && shownMedia) {
-    return (
-      <>
-        <Stage code={code} name={shown.name} step={display.step} media={shownMedia} display={display} />
+        <game.Stage code={code} session={session} display={display} />
         <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi={false} />
       </>
     );
@@ -160,7 +145,7 @@ export function MainScreen() {
     <main className="lobby">
       <header>
         <div>
-          <h1>Before <span className="amp">&amp;</span> After</h1>
+          <h1>{game.heading}</h1>
           <p className="muted">Go to <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/play</strong> and enter</p>
           <p className="code">{code}</p>
         </div>
@@ -180,13 +165,13 @@ export function MainScreen() {
 
       <h2>
         Players ({players.length})
-        {players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => submissionStatus(media[uid]) === "submitted").length} submitted</span>}
+        {players.length > 0 && <span className="submitted-count"> · {players.filter(([uid]) => game.status(session, uid) === "submitted").length} submitted</span>}
       </h2>
       {players.length === 0 && <p className="muted">Waiting for players to join…</p>}
       <ul className="tiles">
         {players.map(([uid, p]) => (
-          <Tile key={uid} player={p} media={media[uid] ?? {}}
-            onPick={() => void setDisplay(code, { uid, step: "before" })} />
+          <Tile key={uid} player={p} status={game.status(session, uid)}
+            onPick={() => void setDisplay(code, { uid, step: game.firstStep })} />
         ))}
       </ul>
       <p className="muted small">
@@ -195,7 +180,7 @@ export function MainScreen() {
           : <>Host: open <strong>{PUBLIC_URL.replace(/^https?:\/\//, "")}/host</strong> on your phone and enter the same code to control this screen.</>}
         {" "}You can also click a player here.
       </p>
-      {session.showDownload && <DownloadZip code={code} players={session.players ?? {}} media={media} />}
+      {session.showDownload && <DownloadZip code={code} session={session} />}
       <button className="link" onClick={() => { store.set(KEY, ""); setCode(""); }}>End session</button>
     </main>
     <Jukebox code={code} jukebox={session.jukebox} duck={videoPlaying} showUi />
@@ -203,8 +188,7 @@ export function MainScreen() {
   );
 }
 
-function Tile({ player, media, onPick }: { player: Player; media: Media; onPick: () => void }) {
-  const status = submissionStatus(media);
+function Tile({ player, status, onPick }: { player: Player; status: SubmissionStatus; onPick: () => void }) {
   return (
     <li>
       <button className="tile" disabled={status !== "submitted"} onClick={onPick}>
@@ -213,98 +197,5 @@ function Tile({ player, media, onPick }: { player: Player; media: Media; onPick:
           : <span className="status">… {status === "sending" ? "sending" : "waiting"}</span>}
       </button>
     </li>
-  );
-}
-
-/** Full-screen presentation of one player's before / after / video, in a gold frame. */
-function Stage({ code, name, step, media, display }: { code: string; name: string; step: Exclude<Step, "list" | "review">; media: Media; display: Display }) {
-  const both = step === "both";
-  return (
-    <main className={both ? "stage both" : "stage"}>
-      {both ? (["before", "after"] as const).map((kind) => (
-        <Framed key={kind}>
-          {(setRatio) => (
-            <SafeImg src={media[kind] ?? ""} alt={`${name} ${kind}`}
-              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)}
-              onFail={() => setRatio(4 / 3)} />
-          )}
-        </Framed>
-      )) : step === "video" ? <Video key="video" src={media.video} playing={display.playing !== false} restartAt={display.restartAt}
-          onEnded={() => void patchDisplay(code, { playing: false })} /> : (
-        <Framed key={step}>
-          {(setRatio) => (
-            <SafeImg src={media[step] ?? ""} alt={`${name} ${step}`}
-              onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)}
-              onFail={() => setRatio(4 / 3)} />
-          )}
-        </Framed>
-      )}
-      <div className="stage-label"><span>{both ? "before & after" : step}</span> · {name}</div>
-      <StageControls code={code} display={display} hasVideo={!!media.video} />
-    </main>
-  );
-}
-
-/**
- * Gold frame that hugs its media. Once the media's aspect ratio is known, it is
- * sized to be as large as the screen allows (see `.frame` in styles.css).
- */
-function Framed({ children }: { children: (setRatio: (r: number) => void) => React.ReactNode }) {
-  const [ratio, setRatio] = useState<number>();
-  return (
-    <div className={ratio ? "frame ready" : "frame"} style={ratio ? ({ "--ratio": ratio } as React.CSSProperties) : undefined}>
-      {children(setRatio)}
-    </div>
-  );
-}
-
-/**
- * Video with no on-screen controls: the host's phone drives play/pause/restart via
- * `display`. Chrome blocks autoplay with sound until the page has had a click; if that
- * happens we start muted (so the host's Play still works) and unmute on the next click.
- */
-function Video({ src, playing, restartAt, onEnded }: { src?: string; playing: boolean; restartAt?: number; onEnded: () => void }) {
-  const ref = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(false);
-  // Use the preloaded in-memory copy if it is ready when the video starts; never swap sources mid-play.
-  const [playable] = useState(() => (src ? playableVideoUrl(src) : ""));
-
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    if (!playing) { v.pause(); return; }
-    v.play().catch(() => {
-      v.muted = true;
-      setMuted(true);
-      v.play().catch(() => {});
-    });
-  }, [playing, src]);
-
-  useEffect(() => {
-    if (restartAt && ref.current) ref.current.currentTime = 0;
-  }, [restartAt]);
-
-  useEffect(() => {
-    if (!muted) return;
-    const unmute = () => { if (ref.current) ref.current.muted = false; setMuted(false); };
-    document.addEventListener("click", unmute, { once: true });
-    document.addEventListener("keydown", unmute, { once: true });
-    return () => {
-      document.removeEventListener("click", unmute);
-      document.removeEventListener("keydown", unmute);
-    };
-  }, [muted]);
-
-  if (!src) return <p className="muted">No video was submitted.</p>;
-  return (
-    <>
-      <Framed>
-        {(setRatio) => (
-          <video ref={ref} src={playable} playsInline onEnded={onEnded}
-            onLoadedMetadata={(e) => setRatio(e.currentTarget.videoWidth / e.currentTarget.videoHeight)} />
-        )}
-      </Framed>
-      {muted && <div className="sound-hint">🔇 Click anywhere on this screen once to turn the sound on</div>}
-    </>
   );
 }

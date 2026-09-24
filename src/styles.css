@@ -291,10 +291,10 @@ body.idle-cursor .stage { cursor: none; }
 .tracklist .title { min-width: 0; overflow-wrap: anywhere; }
 .tracklist .dur { flex-shrink: 0; font-variant-numeric: tabular-nums; opacity: 0.75; }
 
-/* review: everyone's before & after on one screen (--s = layout unit, set from JS) */
+/* review: everyone's photos on one screen (--s = layout unit, --cw = cell width in s, both set from JS) */
 .review { align-content: center; }
 .review-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; box-sizing: content-box; }
-.review-cell { width: calc(var(--s) * 9.6); flex: none; display: flex; flex-direction: column; align-items: center; }
+.review-cell { width: calc(var(--s) * var(--cw)); flex: none; display: flex; flex-direction: column; align-items: center; }
 .review-grid { opacity: 0; }
 .review-grid.revealed { opacity: 1; }
 .review-grid.revealed .review-cell { animation: hang 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards; }
